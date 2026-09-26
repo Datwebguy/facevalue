@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 const COMPACTC_VERSION = '0.31.1';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const srcDir = join(root, 'contract', 'src');
-const only = process.argv[2]; // optional: compile a single contract by name
+const only = process.argv.slice(2).find((a) => !a.startsWith('--')); // optional: compile a single contract by name
 const skipZk = process.argv.includes('--skip-zk');
 
 const sources = [

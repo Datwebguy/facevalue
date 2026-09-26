@@ -17,7 +17,9 @@
     "test": "npm test --workspace contract",
     "localnet": "docker compose -f cli/localnet.yml up -d",
     "localnet:down": "docker compose -f cli/localnet.yml down -v",
-    "proof-server": "docker compose -f cli/proof-server.yml up -d"
+    "proof-server": "docker compose -f cli/proof-server.yml up -d",
+    "attack": "tsx cli/src/attacks.ts",
+    "e2e": "tsx cli/src/e2e.ts"
   },
   "dependencies": {
     "@midnight-ntwrk/compact-runtime": "0.16.0",

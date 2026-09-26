@@ -10,3 +10,4 @@ logs/
 .wallet/
 *-private-state*/
 midnight-level-db/
+logs-compile.txt

@@ -60,7 +60,9 @@ for (const src of sources) {
       `/opt/compactc/compactc ${flags.join(' ')} /work/${posix(src)} /work/${posix(out)}`;
     result = spawnSync(
       'docker',
-      ['run', '--rm', '-v', `${posix(root)}:/work`, '-v', `${posix(toolsDir)}:/opt/compactc`, '-w', '/work',
+      // zk-params (public proving parameters, 12–50 MB each) are cached in tools/ so they download once.
+      ['run', '--rm', '-v', `${posix(root)}:/work`, '-v', `${posix(toolsDir)}:/opt/compactc`,
+        '-v', `${posix(join(root, 'tools', 'zk-params'))}:/root/.cache/midnight/zk-params`, '-w', '/work',
         '--entrypoint', '/bin/sh', 'alpine:3.20', '-c', script],
       { stdio: 'inherit' },
     );

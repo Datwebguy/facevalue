@@ -10,7 +10,8 @@
   },
   "workspaces": [
     "contract",
-    "cli"
+    "cli",
+    "app"
   ],
   "scripts": {
     "compact": "node scripts/compact.mjs",

@@ -12,3 +12,4 @@ logs/
 midnight-level-db/
 logs-compile.txt
 logs-e2e.txt
+logs-*.txt

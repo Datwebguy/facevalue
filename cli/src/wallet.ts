@@ -29,6 +29,20 @@ if (cmd === 'create') {
 
 const w = await SeedWallet.build(env, loadSeed());
 await w.start();
+
+// Sync progress, every 30 s, so a slow sync is visible instead of silent.
+const show = (p: unknown) => {
+  if (!p || typeof p !== 'object') return String(p);
+  const o = p as Record<string, unknown>;
+  const pick = ['appliedIndex', 'highestRelevantWalletIndex', 'highestIndex', 'highestRelevantIndex', 'appliedId', 'highestTransactionId', 'isConnected'];
+  return pick.filter((k) => k in o).map((k) => `${k}=${String(o[k])}`).join(' ') || JSON.stringify(o, (_, v) => (typeof v === 'bigint' ? v.toString() : v)).slice(0, 160);
+};
+const progressLog = w.wallet
+  .state()
+  .pipe(Rx.throttleTime(30_000))
+  .subscribe((s) =>
+    logger.info(`sync · shielded[${show(s.shielded.state.progress)}] · unshielded[${show(s.unshielded.progress)}] · dust[${show(s.dust.state.progress)}]`),
+  );
 const st = await Rx.firstValueFrom(w.wallet.state());
 const address = UnshieldedAddress.codec.encode(getNetworkId(), st.unshielded.address).toString();
 logger.info(`project wallet unshielded address: ${address}`);
@@ -70,5 +84,6 @@ if (cmd === 'status') {
   const s = await waitForSync(w);
   logger.info(JSON.stringify(balances(s), (_, v) => (typeof v === 'bigint' ? v.toString() : v)));
 }
+progressLog.unsubscribe();
 await w.stop();
 process.exit(0);

@@ -15,3 +15,4 @@ logs-e2e.txt
 logs-*.txt
 app/public/facevalue/
 app/public/tkrw/
+contract/src/managed/*/keys/

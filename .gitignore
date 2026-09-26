@@ -13,3 +13,5 @@ midnight-level-db/
 logs-compile.txt
 logs-e2e.txt
 logs-*.txt
+app/public/facevalue/
+app/public/tkrw/

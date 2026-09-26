@@ -111,6 +111,7 @@ async function main() {
   const join = async (id: keyof typeof actors) =>
     (await findDeployedContract(providers, {
       contractAddress: address,
+    tkrwContract: tkrwAddress,
       compiledContract: CompiledFaceValue,
       privateStateId: id,
       initialPrivateState: actors[id],
@@ -176,6 +177,7 @@ async function main() {
   const summary = {
     network: net,
     contractAddress: address,
+    tkrwContract: tkrwAddress,
     showId: hex(showId),
     finalShow: Object.fromEntries(Object.entries(s).map(([k, v]) => [k, v instanceof Uint8Array ? hex(v) : String(v)])),
     passRegistered: (await state()).passes.member(passKey),

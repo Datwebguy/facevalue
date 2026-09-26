@@ -4,6 +4,7 @@ export type Lang = 'ko' | 'en';
 
 const en = {
   navShows: 'Shows',
+  navFan: 'Fan',
   navPass: 'My gate pass',
   navGate: 'Gate scanner',
   heroTitle1: 'Tickets at face value.',
@@ -62,6 +63,7 @@ type Dict = typeof en;
 
 const ko: Dict = {
   navShows: '공연',
+  navFan: '팬',
   navPass: '내 입장 패스',
   navGate: '입장 스캐너',
   heroTitle1: '티켓은 정가로.',

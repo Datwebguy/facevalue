@@ -5,6 +5,7 @@ import jsQR from 'jsqr';
 import { NETWORKS, passKeysFor, readLedger, showsOf, type NetworkName, type ShowView } from './chain';
 import { createPassKey, signPass, toHex, verifyPass, WINDOW_MS, type GateVerdict } from './gatepass';
 import { DEPLOYMENT } from './deployment';
+import { FanPage } from './FanPage';
 import { I18nProvider, LangToggle, useI18n } from './i18n';
 import './styles.css';
 
@@ -45,6 +46,7 @@ function Nav() {
         FaceValue <span className="kr">정가</span>
       </a>
       <a href="#/">{t.navShows}</a>
+      <a href="#/fan">{t.navFan}</a>
       <a href="#/pass">{t.navPass}</a>
       <a href="#/gate">{t.navGate}</a>
       <LangToggle />
@@ -253,7 +255,7 @@ function App() {
   return (
     <>
       <Nav />
-      {route === '/pass' ? <Pass /> : route === '/gate' ? <Gate /> : <Home />}
+      {route === '/fan' ? <FanPage /> : route === '/pass' ? <Pass /> : route === '/gate' ? <Gate /> : <Home />}
       <footer>
         {t.footer} · {Object.keys(NETWORKS).join(' · ')}
       </footer>

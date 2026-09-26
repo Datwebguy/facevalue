@@ -62,3 +62,6 @@ footer { text-align: center; color: var(--muted); font-size: 13px; padding: 24px
 .lang { display: inline-flex; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 3px; }
 .lang button { background: transparent; color: var(--muted); padding: 6px 14px; border-radius: 9px; font-weight: 700; }
 .lang button.on { background: #2f7fe0; color: #fff; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+button:disabled { opacity: 0.45; cursor: not-allowed; }
+.log { list-style: none; padding: 0; margin-top: 16px; max-height: 280px; overflow: auto; }

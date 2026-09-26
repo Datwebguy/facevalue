@@ -7,6 +7,10 @@
 // Every transaction hash and timing is written to docs/evidence/<network>-run.json.
 import { deployContract, findDeployedContract } from '@midnight-ntwrk/midnight-js-contracts';
 import { encodeRawTokenType, rawTokenType } from '@midnight-ntwrk/compact-runtime';
+import { CompiledContract } from '@midnight-ntwrk/midnight-js-protocol/compact-js';
+import { NodeZkConfigProvider } from '@midnight-ntwrk/midnight-js-node-zk-config-provider';
+import { httpClientProofProvider } from '@midnight-ntwrk/midnight-js-http-client-proof-provider';
+import * as Tkrw from '../../contract/src/managed/tkrw/contract/index.js';
 import { writeFileSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
 import {
@@ -75,15 +79,33 @@ async function main() {
     return r;
   };
 
-  const t0 = Date.now();
+  // tKRW: the shielded test-won stablecoin tickets are priced in (its own contract).
+  const tkrwZk = path.resolve(zkConfigPath, '..', 'tkrw');
+  const tkrwZkProvider = new NodeZkConfigProvider<string>(tkrwZk);
+  const tkrwProviders = { ...providers, zkConfigProvider: tkrwZkProvider, proofProvider: httpClientProofProvider(env.proofServer, tkrwZkProvider) };
+  const CompiledTkrw = CompiledContract.make<Tkrw.Contract<undefined>>('Tkrw', Tkrw.Contract<undefined>).pipe(
+    CompiledContract.withVacantWitnesses,
+    CompiledContract.withCompiledFileAssets(tkrwZk),
+  );
+  let t0 = Date.now();
+  const tkrw = (await deployContract(tkrwProviders as never, { compiledContract: CompiledTkrw } as never)) as never as {
+    deployTxData: { public: { contractAddress: string; txHash: string } };
+    callTx: Record<string, (...a: unknown[]) => Promise<{ public: { txHash: string; blockHeight?: number } }>>;
+  };
+  const tkrwAddress = tkrw.deployTxData.public.contractAddress;
+  steps.push({ step: 'deploy tKRW stablecoin', actor: 'issuer', txHash: tkrw.deployTxData.public.txHash, ms: Date.now() - t0 });
+  logger.info(`✔ deployed tKRW at ${tkrwAddress}`);
+  const color = encodeRawTokenType(rawTokenType(pad32('facevalue:tKRW'), tkrwAddress as never));
+
+  t0 = Date.now();
   const deployed = await deployContract(providers, {
     compiledContract: CompiledFaceValue,
-    args: [pureCircuits.rolePk(actors.issuer.roleSecret)],
+    args: [pureCircuits.rolePk(actors.issuer.roleSecret), color],
     privateStateId: 'issuer',
     initialPrivateState: actors.issuer,
   } as never);
   const address = (deployed as { deployTxData: { public: { contractAddress: string; txHash: string } } }).deployTxData.public.contractAddress;
-  steps.push({ step: 'deploy', actor: 'issuer', txHash: (deployed as never as { deployTxData: { public: { txHash: string } } }).deployTxData.public.txHash, ms: Date.now() - t0 });
+  steps.push({ step: 'deploy FaceValue', actor: 'issuer', txHash: (deployed as never as { deployTxData: { public: { txHash: string } } }).deployTxData.public.txHash, ms: Date.now() - t0 });
   logger.info(`✔ deployed FaceValue at ${address}`);
 
   const join = async (id: keyof typeof actors) =>
@@ -98,13 +120,12 @@ async function main() {
   const organizer = await join('organizer');
   const fans = { minji: await join('minji'), joon: await join('joon'), seoyeon: await join('seoyeon') };
 
-  const color = encodeRawTokenType(rawTokenType(pad32('facevalue:tKRW'), address as never));
   const coin = (value: bigint) => ({ nonce: rnd(), color, value });
 
   const state = async () => readLedger((await providers.publicDataProvider.queryContractState(address))!.data);
 
   // 1. test currency
-  await timed('faucet (mint shielded tKRW to the wallet)', 'minji', () => fans.minji.callTx.faucet(1_000_000n));
+  await timed('mint 1,000,000 shielded tKRW to the wallet', 'minji', () => tkrw.callTx.mint(1_000_000n));
 
   // 2. enroll three verified fans in one batch
   await timed('enrollBatch (3 verified fans)', 'issuer', () =>
@@ -124,7 +145,7 @@ async function main() {
 
   // 4. draw
   for (const [name, f] of Object.entries(fans)) await timed('enterDraw', name, () => f.callTx.enterDraw(showId));
-  await timed('closeEntries', 'organizer', () => organizer.callTx.closeEntries(showId));
+  await timed('advance: close entries', 'organizer', () => organizer.callTx.advance(showId));
   await timed('revealDraw', 'organizer', () => organizer.callTx.revealDraw(showId, SEED, SALT, BEACON));
 
   let s = (await state()).shows.lookup(showId);
@@ -138,7 +159,7 @@ async function main() {
 
   // 6. a winner returns their ticket: refunded, seat goes to the pool
   await timed('returnTicket (refund at face value)', won[0], () => fans[won[0]].callTx.returnTicket(showId, 0n));
-  await timed('openSale', 'organizer', () => organizer.callTx.openSale(showId));
+  await timed('advance: open face-value pool', 'organizer', () => organizer.callTx.advance(showId));
 
   // 7. the fan who was not drawn buys the returned seat at face value
   await timed('buyFromPool (face value only)', lost[0], () => fans[lost[0]].callTx.buyFromPool(showId, 0n, coin(FACE)));
@@ -148,7 +169,7 @@ async function main() {
   await timed('checkIn (register gate pass)', won[1], () => fans[won[1]].callTx.checkIn(showId, 0n, passKey));
 
   // 9. close and withdraw
-  await timed('closeShow', 'organizer', () => organizer.callTx.closeShow(showId));
+  await timed('advance: close show', 'organizer', () => organizer.callTx.advance(showId));
   await timed('withdraw (organizer revenue)', 'organizer', () => organizer.callTx.withdraw(showId));
 
   s = (await state()).shows.lookup(showId);

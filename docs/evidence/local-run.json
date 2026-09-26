@@ -1,0 +1,152 @@
+{
+  "network": "local",
+  "contractAddress": "cfd933b833a894be7c64825012ce5fe8b1cc9296bde5431ce0f6884718bcb987",
+  "showId": "f61a210fd18800e1a59b143b293068cae72a4030160e254316435240f15ea945",
+  "finalShow": {
+    "organizer": "91331c8cdb669ea935b815995b00b41965b471fa4beb19681eef96d7f846c934",
+    "faceValue": "110000",
+    "capacity": "2",
+    "perFanCap": "2",
+    "phase": "4",
+    "seedCommit": "c410c2f63ff22d29eadd05b851e2761ffbf5c7a7d5496e158ffe93afee820ef6",
+    "beaconRound": "5000000",
+    "beacon": "123456789",
+    "seed": "3710870469",
+    "entropy": "7236406167",
+    "entries": "3",
+    "offset": "0",
+    "issued": "3",
+    "pool": "0",
+    "returned": "1",
+    "checkedIn": "1",
+    "revenue": "0"
+  },
+  "passRegistered": true,
+  "steps": [
+    {
+      "step": "deploy tKRW stablecoin",
+      "actor": "issuer",
+      "txHash": "dccf6defd4e1801740db15948f98138858988d56f5bb0ab5e64ec1e2ca101bdc",
+      "ms": 19569
+    },
+    {
+      "step": "deploy FaceValue",
+      "actor": "issuer",
+      "txHash": "8afd019b86cb3e9816944e1737d54fa9fa5b62e565159467d486fff7460b7d38",
+      "ms": 17683
+    },
+    {
+      "step": "mint 1,000,000 shielded tKRW to the wallet",
+      "actor": "minji",
+      "txHash": "6f21dd13e841d4e58bab03090026820651e3f988b1bd2edc2642724f02cfd206",
+      "blockHeight": 568,
+      "ms": 27703
+    },
+    {
+      "step": "enrollBatch (3 verified fans)",
+      "actor": "issuer",
+      "txHash": "7b55faf800fea8cba306efdd7b067066a2ad1af348d1621c20b63cab7cf5790d",
+      "blockHeight": 572,
+      "ms": 24396
+    },
+    {
+      "step": "createShow (sealed seed committed)",
+      "actor": "organizer",
+      "txHash": "3ac1e23e8951f380bfc64614ec2bdcc78c0fd8b9c570bfa17b3720f6c8969734",
+      "blockHeight": 576,
+      "ms": 24047
+    },
+    {
+      "step": "enterDraw",
+      "actor": "minji",
+      "txHash": "9ea985c075dce2c1a8aa30b359b5080bb4941731159ebb32d06f8c83fbfc4c5f",
+      "blockHeight": 580,
+      "ms": 22723
+    },
+    {
+      "step": "enterDraw",
+      "actor": "joon",
+      "txHash": "e4ddbc619cf89907d2181b8c26707c684673f8b6ce3795ad094095d8e4d94528",
+      "blockHeight": 584,
+      "ms": 24114
+    },
+    {
+      "step": "enterDraw",
+      "actor": "seoyeon",
+      "txHash": "fd0aa2ca083e2cd4bdd803343e5fd1cadbe7572bf872032d748ba5be23d4617f",
+      "blockHeight": 588,
+      "ms": 23999
+    },
+    {
+      "step": "advance: close entries",
+      "actor": "organizer",
+      "txHash": "c61d205c967789ac4456c911aa22c5a02cac829aed81e66bc548a5618102e5cf",
+      "blockHeight": 592,
+      "ms": 24077
+    },
+    {
+      "step": "revealDraw",
+      "actor": "organizer",
+      "txHash": "6b3f737790d3a4739ef973d74669c2f3c25f9eae3e8268609ded545c5163738b",
+      "blockHeight": 596,
+      "ms": 24161
+    },
+    {
+      "step": "claimTicket (pay ₩110,000 shielded)",
+      "actor": "minji",
+      "txHash": "a4fdd46cb5fb79e3a8dd920f33672ef1a71d797ce5ead3c3b49de532d23bb441",
+      "blockHeight": 605,
+      "ms": 54878
+    },
+    {
+      "step": "claimTicket (pay ₩110,000 shielded)",
+      "actor": "joon",
+      "txHash": "672077e3f7b9eac84c9754154c7e0f9d59510e8605180b97c27fca555c8f45b7",
+      "blockHeight": 615,
+      "ms": 58994
+    },
+    {
+      "step": "returnTicket (refund at face value)",
+      "actor": "minji",
+      "txHash": "57f8db1dd3b4e47be5fda0b2e0877dfa50b82778f766516b73a7b0ee7a9d768a",
+      "blockHeight": 623,
+      "ms": 48160
+    },
+    {
+      "step": "advance: open face-value pool",
+      "actor": "organizer",
+      "txHash": "2c14c76d4831eae3cb98e27c7eded92319ac4afbf1d7a1bc93bfa6855d518550",
+      "blockHeight": 627,
+      "ms": 24114
+    },
+    {
+      "step": "buyFromPool (face value only)",
+      "actor": "seoyeon",
+      "txHash": "3deea4cf966d5846e5ec1fb36b77e41c3b6d0944c072ff7c1610e73bad272027",
+      "blockHeight": 638,
+      "ms": 65541
+    },
+    {
+      "step": "checkIn (register gate pass)",
+      "actor": "joon",
+      "txHash": "27d482b24525de45de26e623df247a84ed64b3d794ddd4d6689d85364e479dc1",
+      "blockHeight": 642,
+      "ms": 24169
+    },
+    {
+      "step": "advance: close show",
+      "actor": "organizer",
+      "txHash": "d131699150935ebf09fd7d97ba963af99b32bc1fd30f4a56af073b95a4fd04b9",
+      "blockHeight": 646,
+      "ms": 23922
+    },
+    {
+      "step": "withdraw (organizer revenue)",
+      "actor": "organizer",
+      "txHash": "ea6967958f0e66a719d0b192b320918ef3d10cd43a4d588e182c5dab9aa4efe1",
+      "blockHeight": 653,
+      "ms": 42928
+    }
+  ],
+  "ranAt": "2026-09-26T17:35:27.192Z"
+}

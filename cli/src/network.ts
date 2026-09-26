@@ -147,3 +147,41 @@ export const buildProviders = <PS>(w: SeedWallet, storeName: string) => {
     midnightProvider: w,
   };
 };
+
+/**
+ * Preprod: make sure the wallet has tNIGHT (free faucet) and tDUST (fees), in one session.
+ * Local devnet: the genesis wallet already has both.
+ */
+export async function ensureFunded(w: SeedWallet): Promise<void> {
+  const { FaucetClient } = await import('@midnight-ntwrk/testkit-js');
+  const { UnshieldedAddress } = await import('@midnight-ntwrk/wallet-sdk-address-format');
+  const { getNetworkId } = await import('@midnight-ntwrk/midnight-js-network-id');
+  const { unshieldedToken } = await import('@midnight-ntwrk/midnight-js-protocol/ledger');
+  let s = await waitForSync(w);
+  const night = () => s.unshielded.balances[unshieldedToken().raw] ?? 0n;
+  if (night() === 0n && w.env.faucet) {
+    const address = UnshieldedAddress.codec.encode(getNetworkId(), s.unshielded.address).toString();
+    logger.info(`requesting tNIGHT from the faucet for ${address}`);
+    await new FaucetClient(w.env.faucet, logger).requestTokens(address);
+    s = await Rx.firstValueFrom(
+      w.wallet.state().pipe(Rx.throttleTime(3000), Rx.filter((x) => isSynced(x) && (x.unshielded.balances[unshieldedToken().raw] ?? 0n) > 0n)),
+    );
+  }
+  logger.info(`tNIGHT balance ${night()}`);
+  if (s.dust.balance(new Date()) === 0n) {
+    const utxos = s.unshielded.availableCoins.filter((c) => !c.meta.registeredForDustGeneration);
+    if (utxos.length) {
+      const dustState = await w.wallet.dust.waitForSyncedState();
+      const recipe = await w.wallet.registerNightUtxosForDustGeneration(
+        utxos,
+        w.keystore.getPublicKey() as never,
+        (p) => w.keystore.signData(p),
+        dustState.address,
+      );
+      const tx = await w.wallet.finalizeRecipe(recipe);
+      logger.info(`dust registration tx ${await w.wallet.submitTransaction(tx)}`);
+    }
+    await waitForDust(w);
+  }
+  logger.info('wallet has tDUST for fees');
+}

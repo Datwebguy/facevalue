@@ -16,3 +16,4 @@ logs-*.txt
 app/public/facevalue/
 app/public/tkrw/
 contract/src/managed/*/keys/
+.vercel/

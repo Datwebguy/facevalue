@@ -1,0 +1,51 @@
+# Deploys FaceValue to Midnight Preprod, runs the full lifecycle with real proofs,
+# commits the evidence, then builds the web app against the live contracts and
+# deploys it to Vercel. Run manually from the Actions tab.
+#
+# Secrets: FV_SEED (project wallet seed, testnet only), VERCEL_TOKEN.
+# Variables: VERCEL_ORG_ID, VERCEL_PROJECT_ID.
+name: Preprod deploy
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  preprod:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: npm }
+      - name: Install Compact toolchain 0.31.1
+        run: |
+          curl --proto '=https' --tlsv1.2 -LsSf https://github.com/midnightntwrk/compact/releases/latest/download/compact-installer.sh | sh
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+      - run: compact update 0.31.1
+      - run: npm ci
+      - name: Compile contracts with proving keys
+        run: node scripts/compact.mjs
+      - name: Start proof server
+        run: |
+          docker run -d --name proof-server -p 6300:6300 midnightntwrk/proof-server:8.0.3 midnight-proof-server -v
+          for i in $(seq 1 120); do curl -s -o /dev/null http://127.0.0.1:6300/ && docker logs proof-server 2>&1 | grep -q "listening on" && break; sleep 5; done
+      - name: Full lifecycle on Preprod (real proofs)
+        env:
+          FV_SEED: ${{ secrets.FV_SEED }}
+        run: npx tsx cli/src/e2e.ts preprod
+      - name: Commit evidence
+        run: |
+          git config user.name Datwebguy
+          git config user.email Datwebguy@users.noreply.github.com
+          node scripts/deployment-from-evidence.mjs preprod
+          git add docs/evidence/preprod-run.json app/src/deployment.ts
+          git commit -m "Preprod deployment evidence" || true
+          git push
+      - name: Build app
+        run: npm run build -w app
+      - name: Deploy to Vercel
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+        run: npx vercel@latest deploy app/dist --prod --yes --token "$VERCEL_TOKEN"

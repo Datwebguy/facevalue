@@ -11,7 +11,7 @@ import { CompiledContract } from '@midnight-ntwrk/midnight-js-protocol/compact-j
 import { NodeZkConfigProvider } from '@midnight-ntwrk/midnight-js-node-zk-config-provider';
 import { httpClientProofProvider } from '@midnight-ntwrk/midnight-js-http-client-proof-provider';
 import * as Tkrw from '../../contract/src/managed/tkrw/contract/index.js';
-import { writeFileSync, mkdirSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import {
   CompiledFaceValue,
@@ -20,7 +20,9 @@ import {
   pureCircuits,
   type FaceValuePrivateState,
 } from '../../contract/src/index.js';
-import { GENESIS_SEED, SeedWallet, buildProviders, environments, logger, waitForDust, waitForSync, zkConfigPath } from './network.js';
+import { GENESIS_SEED, SeedWallet, buildProviders, ensureFunded, environments, logger, zkConfigPath } from './network.js';
+
+const readProjectSeed = () => JSON.parse(readFileSync('.wallet/preprod.json', 'utf8')).seed as string;
 
 const net = (process.argv[2] ?? 'local') as 'local' | 'preprod';
 const env = environments[net];
@@ -46,12 +48,10 @@ const BEACON = 123_456_789n;
 
 async function main() {
   logger.info(`FaceValue e2e on ${net} — proof server ${env.proofServer}, zk assets ${zkConfigPath}`);
-  const wallet = await SeedWallet.build(env, process.env.FV_SEED ?? (net === 'local' ? GENESIS_SEED : undefined));
+  const wallet = await SeedWallet.build(env, process.env.FV_SEED ?? (net === 'local' ? GENESIS_SEED : readProjectSeed()));
   await wallet.start();
   logger.info('syncing wallet…');
-  await waitForSync(wallet);
-  await waitForDust(wallet);
-  logger.info('wallet synced with DUST for fees');
+  await ensureFunded(wallet);
 
   const providers = buildProviders<FaceValuePrivateState>(wallet, `facevalue-${net}-${Date.now()}`);
 

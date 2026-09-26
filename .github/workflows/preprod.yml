@@ -1,9 +1,8 @@
 # Deploys FaceValue to Midnight Preprod, runs the full lifecycle with real proofs,
-# commits the evidence, then builds the web app against the live contracts and
-# deploys it to Vercel. Run manually from the Actions tab.
+# and commits the evidence plus the app's deployment config. Run manually.
 #
-# Secrets: FV_SEED (project wallet seed, testnet only), VERCEL_TOKEN.
-# Variables: VERCEL_ORG_ID, VERCEL_PROJECT_ID.
+# No secrets: each run creates a throwaway testnet wallet, funds it from the free
+# Preprod faucet, and discards it. The web app is deployed separately (vercel CLI).
 name: Preprod deploy
 on:
   workflow_dispatch:
@@ -31,7 +30,7 @@ jobs:
           for i in $(seq 1 120); do curl -s -o /dev/null http://127.0.0.1:6300/ && docker logs proof-server 2>&1 | grep -q "listening on" && break; sleep 5; done
       - name: Full lifecycle on Preprod (real proofs)
         env:
-          FV_SEED: ${{ secrets.FV_SEED }}
+          LOG_LEVEL: info
         run: npx tsx cli/src/e2e.ts preprod
       - name: Commit evidence
         run: |
@@ -41,11 +40,3 @@ jobs:
           git add docs/evidence/preprod-run.json app/src/deployment.ts
           git commit -m "Preprod deployment evidence" || true
           git push
-      - name: Build app
-        run: npm run build -w app
-      - name: Deploy to Vercel
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
-        run: npx vercel@latest deploy app/dist --prod --yes --token "$VERCEL_TOKEN"

@@ -11,7 +11,7 @@ import { CompiledContract } from '@midnight-ntwrk/midnight-js-protocol/compact-j
 import { NodeZkConfigProvider } from '@midnight-ntwrk/midnight-js-node-zk-config-provider';
 import { httpClientProofProvider } from '@midnight-ntwrk/midnight-js-http-client-proof-provider';
 import * as Tkrw from '../../contract/src/managed/tkrw/contract/index.js';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import {
   CompiledFaceValue,
@@ -22,7 +22,10 @@ import {
 } from '../../contract/src/index.js';
 import { GENESIS_SEED, SeedWallet, buildProviders, ensureFunded, environments, logger, zkConfigPath } from './network.js';
 
-const readProjectSeed = () => JSON.parse(readFileSync('.wallet/preprod.json', 'utf8')).seed as string;
+// Preprod seed: FV_SEED, else the local project wallet, else a throwaway wallet
+// created for this run (funded from the free faucet, discarded afterwards).
+const readProjectSeed = (): string | undefined =>
+  existsSync('.wallet/preprod.json') ? (JSON.parse(readFileSync('.wallet/preprod.json', 'utf8')).seed as string) : undefined;
 
 const net = (process.argv[2] ?? 'local') as 'local' | 'preprod';
 const env = environments[net];

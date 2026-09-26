@@ -6,7 +6,7 @@ Korea's anti-scalping law took effect on **28 August 2026**. Ticket platforms mu
 buyers, and resale above face value is illegal. The industry's answers so far all collect more
 personal data: real-name ID checks at the gate, HYBE's *Face Pass* facial recognition, iris-scanning orbs.
 They land just as the amended Personal Information Protection Act (in force 11 Sep 2026) and
-Coupang's record ₩1.3 trillion-scale penalty made holding that data a liability.
+Coupang's record ₩624.7 billion ($409M) data-breach penalty made holding that data a liability.
 
 FaceValue does the verification **without collecting anything**:
 

@@ -1,18 +1,21 @@
 {
   "network": "local",
-  "contractAddress": "cfd933b833a894be7c64825012ce5fe8b1cc9296bde5431ce0f6884718bcb987",
-  "showId": "f61a210fd18800e1a59b143b293068cae72a4030160e254316435240f15ea945",
+  "contractAddress": "6553493ceabeaffffc84ae40916d44aaa2444aba68aef94c9ca90a166c7a2e75",
+  "tkrwContract": "7bb08d8dc4583872979bd10ab4048e5392dd5c84cd4de777e97c73902ce2acf2",
+  "showId": "b2cb41354a1c5ea60fbd9e894e40d62deae87746a06997b7cba6b335913472be",
   "finalShow": {
-    "organizer": "91331c8cdb669ea935b815995b00b41965b471fa4beb19681eef96d7f846c934",
+    "organizer": "1ca74c6ded214a4833b5ce672a4045bf8bbdb856625fc71537c3187da942d97a",
     "faceValue": "110000",
     "capacity": "2",
     "perFanCap": "2",
     "phase": "4",
-    "seedCommit": "c410c2f63ff22d29eadd05b851e2761ffbf5c7a7d5496e158ffe93afee820ef6",
+    "seedCommit": "20bf0ce7088a60b9ef97a1ff02afff1911df96b4c53c38a7d3f0e9d1237c3ceb",
     "beaconRound": "5000000",
+    "revealBy": "1791053438",
+    "organizerDefaulted": "false",
     "beacon": "123456789",
-    "seed": "3710870469",
-    "entropy": "7236406167",
+    "seed": "3814882999",
+    "entropy": "10957169924",
     "entries": "3",
     "offset": "0",
     "issued": "3",
@@ -26,127 +29,127 @@
     {
       "step": "deploy tKRW stablecoin",
       "actor": "issuer",
-      "txHash": "dccf6defd4e1801740db15948f98138858988d56f5bb0ab5e64ec1e2ca101bdc",
-      "ms": 19569
+      "txHash": "617340b17ee9ffc7dba4e926b4265a0fe54fa86040d3dda723dd1f1e715fe864",
+      "ms": 25357
     },
     {
       "step": "deploy FaceValue",
       "actor": "issuer",
-      "txHash": "8afd019b86cb3e9816944e1737d54fa9fa5b62e565159467d486fff7460b7d38",
-      "ms": 17683
+      "txHash": "93da81afb616289e19656f6cd9b337357ac9b49d25b3618c79cf9caee0b968fa",
+      "ms": 18934
     },
     {
       "step": "mint 1,000,000 shielded tKRW to the wallet",
       "actor": "minji",
-      "txHash": "6f21dd13e841d4e58bab03090026820651e3f988b1bd2edc2642724f02cfd206",
-      "blockHeight": 568,
-      "ms": 27703
+      "txHash": "5c5faa64d8295796989d47553c0e140ea929fa40ceddd1e4c25ca77208daa2e8",
+      "blockHeight": 1400,
+      "ms": 38171
     },
     {
       "step": "enrollBatch (3 verified fans)",
       "actor": "issuer",
-      "txHash": "7b55faf800fea8cba306efdd7b067066a2ad1af348d1621c20b63cab7cf5790d",
-      "blockHeight": 572,
-      "ms": 24396
+      "txHash": "e0159bedc96bf6f0f883dc00780b4bf59155eea821b804b14abbccc244758248",
+      "blockHeight": 1405,
+      "ms": 29721
     },
     {
       "step": "createShow (sealed seed committed)",
       "actor": "organizer",
-      "txHash": "3ac1e23e8951f380bfc64614ec2bdcc78c0fd8b9c570bfa17b3720f6c8969734",
-      "blockHeight": 576,
-      "ms": 24047
+      "txHash": "c2cc0fed7a9bfbdaedbc73ea3f6b4fa934f74b4df2ace9d1b57b36dce1c52e02",
+      "blockHeight": 1409,
+      "ms": 24048
     },
     {
       "step": "enterDraw",
       "actor": "minji",
-      "txHash": "9ea985c075dce2c1a8aa30b359b5080bb4941731159ebb32d06f8c83fbfc4c5f",
-      "blockHeight": 580,
-      "ms": 22723
+      "txHash": "fead95df01aba2d713ce6ec5cc5d6a5788c75163831ca8f678d8c826de79b80d",
+      "blockHeight": 1414,
+      "ms": 30747
     },
     {
       "step": "enterDraw",
       "actor": "joon",
-      "txHash": "e4ddbc619cf89907d2181b8c26707c684673f8b6ce3795ad094095d8e4d94528",
-      "blockHeight": 584,
-      "ms": 24114
+      "txHash": "37d444c3e1db2b3618c87e8b9451d1e07ae4842000841db2caedc4f86a324598",
+      "blockHeight": 1418,
+      "ms": 24137
     },
     {
       "step": "enterDraw",
       "actor": "seoyeon",
-      "txHash": "fd0aa2ca083e2cd4bdd803343e5fd1cadbe7572bf872032d748ba5be23d4617f",
-      "blockHeight": 588,
-      "ms": 23999
+      "txHash": "a836bc6fcd572150c85db7faa582eefe32cf8b673d41b5f1eb42658c13a9ea44",
+      "blockHeight": 1422,
+      "ms": 24104
     },
     {
       "step": "advance: close entries",
       "actor": "organizer",
-      "txHash": "c61d205c967789ac4456c911aa22c5a02cac829aed81e66bc548a5618102e5cf",
-      "blockHeight": 592,
-      "ms": 24077
+      "txHash": "d6b6ed1d5c2c8021471f14d473bd03e5dbde477edf7088f24270bc807cb7ed62",
+      "blockHeight": 1426,
+      "ms": 24018
     },
     {
       "step": "revealDraw",
       "actor": "organizer",
-      "txHash": "6b3f737790d3a4739ef973d74669c2f3c25f9eae3e8268609ded545c5163738b",
-      "blockHeight": 596,
-      "ms": 24161
+      "txHash": "247eaea078a4637f9c1451b3f41410c4fdb3e8cc919354550d928c60fd6146d9",
+      "blockHeight": 1431,
+      "ms": 29415
     },
     {
       "step": "claimTicket (pay ₩110,000 shielded)",
       "actor": "minji",
-      "txHash": "a4fdd46cb5fb79e3a8dd920f33672ef1a71d797ce5ead3c3b49de532d23bb441",
-      "blockHeight": 605,
-      "ms": 54878
+      "txHash": "bdd9b25534736f8bced19419ad528b9ec2d841c6a30dc13865e8750ecad715a9",
+      "blockHeight": 1442,
+      "ms": 65605
     },
     {
       "step": "claimTicket (pay ₩110,000 shielded)",
       "actor": "joon",
-      "txHash": "672077e3f7b9eac84c9754154c7e0f9d59510e8605180b97c27fca555c8f45b7",
-      "blockHeight": 615,
-      "ms": 58994
+      "txHash": "87be52d75be8c5e1847f08c1d5a8c87d3d6af687495691a3119a33c47ee68299",
+      "blockHeight": 1454,
+      "ms": 72363
     },
     {
       "step": "returnTicket (refund at face value)",
       "actor": "minji",
-      "txHash": "57f8db1dd3b4e47be5fda0b2e0877dfa50b82778f766516b73a7b0ee7a9d768a",
-      "blockHeight": 623,
-      "ms": 48160
+      "txHash": "5b6d5c938dfa542cc25e7433b8856777cdb96267d2baa15d6fc6c389946e9c42",
+      "blockHeight": 1463,
+      "ms": 53540
     },
     {
       "step": "advance: open face-value pool",
       "actor": "organizer",
-      "txHash": "2c14c76d4831eae3cb98e27c7eded92319ac4afbf1d7a1bc93bfa6855d518550",
-      "blockHeight": 627,
-      "ms": 24114
+      "txHash": "a8e5edd9a034bd5be72d60309e555fb44f829d04c8f0c49dd815d20b8a5603b3",
+      "blockHeight": 1467,
+      "ms": 24075
     },
     {
       "step": "buyFromPool (face value only)",
       "actor": "seoyeon",
-      "txHash": "3deea4cf966d5846e5ec1fb36b77e41c3b6d0944c072ff7c1610e73bad272027",
-      "blockHeight": 638,
-      "ms": 65541
+      "txHash": "6cf01d7f5a73b3bdc54150418b2d886b107d370acb9a6eee162b7d33b586f6ff",
+      "blockHeight": 1481,
+      "ms": 84716
     },
     {
       "step": "checkIn (register gate pass)",
       "actor": "joon",
-      "txHash": "27d482b24525de45de26e623df247a84ed64b3d794ddd4d6689d85364e479dc1",
-      "blockHeight": 642,
-      "ms": 24169
+      "txHash": "d3ad0c22ffb9149fd2dee386da88e13d20a7845b2b9075a8fccd74b35b2de4d2",
+      "blockHeight": 1486,
+      "ms": 29542
     },
     {
       "step": "advance: close show",
       "actor": "organizer",
-      "txHash": "d131699150935ebf09fd7d97ba963af99b32bc1fd30f4a56af073b95a4fd04b9",
-      "blockHeight": 646,
-      "ms": 23922
+      "txHash": "4ad4419fd55fa37dc74c0e5d4cee2cc3b4fe19fe6942dabe3f1dd857fddc3199",
+      "blockHeight": 1491,
+      "ms": 30909
     },
     {
       "step": "withdraw (organizer revenue)",
       "actor": "organizer",
-      "txHash": "ea6967958f0e66a719d0b192b320918ef3d10cd43a4d588e182c5dab9aa4efe1",
-      "blockHeight": 653,
-      "ms": 42928
+      "txHash": "9e43144db8c7c675cf59295df00d6ebef02d08456af4fcf87fc7ec1c863827c6",
+      "blockHeight": 1502,
+      "ms": 65532
     }
   ],
-  "ranAt": "2026-09-26T17:35:27.192Z"
+  "ranAt": "2026-09-26T19:00:21.043Z"
 }

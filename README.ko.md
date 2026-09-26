@@ -25,7 +25,7 @@ FaceValue는 **아무것도 수집하지 않고** 인증합니다.
 | 구성 요소 | 상태 |
 |---|---|
 | Compact 컨트랙트 (`contract/src/facevalue.compact`, 서킷 10개) | **동작.** 실제 증명 키로 컴파일됨 |
-| 실제 ZK 증명으로 전체 생애주기 실행 | **로컬 Midnight 네트워크에서 동작**, 트랜잭션 19건 (`docs/evidence/local-run.json`). Preprod 배포 진행 중 |
+| 실제 ZK 증명으로 전체 생애주기 실행 | **로컬 Midnight 네트워크에서 동작**, 트랜잭션 18건 (`docs/evidence/local-run.json`). Preprod 배포 진행 중 |
 | 컨트랙트로의 실드 결제와 환불 | **동작.** 체인에서 증명됨 (`cli/src/spike-pay.ts`) |
 | 공격 스크립트 (재판매 회수, 봇, 중복 응모, 추첨 조작, 정가 초과 결제, 중복 입장) | **동작.** `npm run attack` |
 | 공개 상태를 읽는 공연 대시보드, 한/영 전환 | **동작.** Midnight 인덱서에서 직접 읽음 |

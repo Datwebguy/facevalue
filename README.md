@@ -26,7 +26,7 @@ FaceValue does the verification **without collecting anything**:
 | Piece | Status |
 |---|---|
 | Compact contract (`contract/src/facevalue.compact`, 10 circuits) | **Live.** Compiled with real proving keys. |
-| Full lifecycle with real ZK proofs on a Midnight network | **Live on a local Midnight network**, 19 transactions (`docs/evidence/local-run.json`). Preprod run in progress. |
+| Full lifecycle with real ZK proofs on a Midnight network | **Live on a local Midnight network**, 18 transactions (`docs/evidence/local-run.json`). Preprod run in progress. |
 | Shielded payment into the contract and refund out of it | **Live.** Proven on-chain (`cli/src/spike-pay.ts`). |
 | Attack scripts (resale clawback, bots, double entry, rigged draw, above-face payment, double admission) | **Live.** `npm run attack` runs the compiled circuits. |
 | Show dashboard reading public contract state | **Live.** Reads straight from the Midnight indexer. |

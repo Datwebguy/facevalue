@@ -2,9 +2,10 @@ import { StrictMode, useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import QRCode from 'qrcode';
 import jsQR from 'jsqr';
-import { NETWORKS, passKeysFor, phaseName, readLedger, showsOf, type NetworkName, type ShowView } from './chain';
+import { NETWORKS, passKeysFor, readLedger, showsOf, type NetworkName, type ShowView } from './chain';
 import { createPassKey, signPass, toHex, verifyPass, WINDOW_MS, type GateVerdict } from './gatepass';
 import { DEPLOYMENT } from './deployment';
+import { I18nProvider, LangToggle, useI18n } from './i18n';
 import './styles.css';
 
 const won = (n: bigint) => `₩${Number(n).toLocaleString('ko-KR')}`;
@@ -37,70 +38,68 @@ function useLedger(network: NetworkName, address: string) {
 }
 
 function Nav() {
+  const { t } = useI18n();
   return (
     <nav className="nav">
       <a href="#/" className="brand">
         FaceValue <span className="kr">정가</span>
       </a>
-      <a href="#/">Shows</a>
-      <a href="#/pass">My gate pass</a>
-      <a href="#/gate">Gate scanner</a>
+      <a href="#/">{t.navShows}</a>
+      <a href="#/pass">{t.navPass}</a>
+      <a href="#/gate">{t.navGate}</a>
+      <LangToggle />
     </nav>
   );
 }
 
 function Home() {
+  const { t } = useI18n();
   const { shows, ledger, error } = useLedger(DEPLOYMENT.network, DEPLOYMENT.contract);
   return (
     <main>
       <section className="hero">
         <h1>
-          Tickets at face value.
+          {t.heroTitle1}
           <br />
-          Entry without showing your face.
+          {t.heroTitle2}
         </h1>
-        <p>
-          Every FaceValue ticket holder is a verified, unique human — yet no issuer, organizer, venue or chain observer
-          learns <em>which</em> human holds <em>which</em> ticket. There is no transfer button: the only way out of a
-          ticket is a face-value refund back to the pool, so scalping has nowhere to happen.
-        </p>
+        <p>{t.heroBody}</p>
       </section>
 
       <section>
-        <h2>Live on Midnight {DEPLOYMENT.network}</h2>
+        <h2>{t.liveOn} {DEPLOYMENT.network}</h2>
         <p className="mono small">
-          contract <a href={`${DEPLOYMENT.explorer}${DEPLOYMENT.contract}`} target="_blank">{DEPLOYMENT.contract}</a>
+          {t.contract} <a href={`${DEPLOYMENT.explorer}${DEPLOYMENT.contract}`} target="_blank">{DEPLOYMENT.contract}</a>
         </p>
         {error && <p className="warn">{error}</p>}
-        {!shows && !error && <p>Reading the public ledger…</p>}
+        {!shows && !error && <p>{t.reading}</p>}
         {ledger && (
           <p className="small">
-            Verified fans in the registry: <b>{String(ledger.enrolled)}</b> — the chain stores only hashed commitments;
-            it cannot say who they are.
+            {t.enrolled}: <b>{String(ledger.enrolled)}</b> — {t.enrolledNote}
           </p>
         )}
         <div className="grid">
           {shows?.map((s) => (
             <article key={s.id} className="card">
               <header>
-                <span className="phase">{phaseName[s.phase]}</span>
-                <span className="mono small">show {s.id.slice(0, 10)}…</span>
+                <span className="phase">{t.phases[s.phase]}</span>
+                <span className="mono small">{t.show} {s.id.slice(0, 10)}…</span>
               </header>
               <div className="price">{won(s.faceValue)}</div>
               <dl>
-                <dt>Seats</dt><dd>{String(s.capacity)}</dd>
-                <dt>Draw entries</dt><dd>{String(s.entries)}</dd>
-                <dt>Tickets issued</dt><dd>{String(s.issued)}</dd>
-                <dt>Returned for refund</dt><dd>{String(s.returned)}</dd>
-                <dt>In face-value pool</dt><dd>{String(s.pool)}</dd>
-                <dt>Checked in</dt><dd>{String(s.checkedIn)}</dd>
-                <dt>Max per fan</dt><dd>{String(s.perFanCap)}</dd>
+                <dt>{t.seats}</dt><dd>{String(s.capacity)}</dd>
+                <dt>{t.entries}</dt><dd>{String(s.entries)}</dd>
+                <dt>{t.issued}</dt><dd>{String(s.issued)}</dd>
+                <dt>{t.returned}</dt><dd>{String(s.returned)}</dd>
+                <dt>{t.pool}</dt><dd>{String(s.pool)}</dd>
+                <dt>{t.checkedIn}</dt><dd>{String(s.checkedIn)}</dd>
+                <dt>{t.maxPerFan}</dt><dd>{String(s.perFanCap)}</dd>
               </dl>
               <ul className="facts">
-                <li>✔ every ticket held by a verified unique human</li>
-                <li>✔ nobody above {String(s.perFanCap)} tickets</li>
-                <li>✔ every resale at exactly {won(s.faceValue)}</li>
-                <li>✔ draw seed was sealed before entries opened</li>
+                <li>✔ {t.factHuman}</li>
+                <li>✔ {t.factCap(String(s.perFanCap))}</li>
+                <li>✔ {t.factFace(won(s.faceValue))}</li>
+                <li>✔ {t.factSeed}</li>
               </ul>
             </article>
           ))}
@@ -109,12 +108,12 @@ function Home() {
 
       <section className="split">
         <div>
-          <h3>Public (anyone can audit)</h3>
-          <p>Seats, entries, tickets issued, returns, pool size, check-ins, the draw seed and its commitment.</p>
+          <h3>{t.publicTitle}</h3>
+          <p>{t.publicBody}</p>
         </div>
         <div>
-          <h3>Private (never leaves the fan's device)</h3>
-          <p>Who entered, who won, who holds which ticket, who returned one, the fan's identity.</p>
+          <h3>{t.privateTitle}</h3>
+          <p>{t.privateBody}</p>
         </div>
       </section>
     </main>
@@ -124,6 +123,7 @@ function Home() {
 // --- fan: rotating gate pass -------------------------------------------------
 
 function Pass() {
+  const { t } = useI18n();
   const [key, setKey] = useState<Awaited<ReturnType<typeof createPassKey>> | null>(null);
   const [show, setShow] = useState(DEPLOYMENT.showId);
   const [qr, setQr] = useState('');
@@ -144,25 +144,22 @@ function Pass() {
   }, [key, show]);
   return (
     <main className="narrow">
-      <h2>My gate pass</h2>
-      <p>
-        At check-in (from home, before the show) your ticket is spent on-chain and this device's key is registered as a
-        one-time pass. At the door the gate only checks a signature — no ID, no face scan, no network.
-      </p>
+      <h2>{t.passTitle}</h2>
+      <p>{t.passBody}</p>
       <label>
-        Show id <input className="mono" value={show} onChange={(e) => setShow(e.target.value.trim())} />
+        {t.showId} <input className="mono" value={show} onChange={(e) => setShow(e.target.value.trim())} />
       </label>
       {!key ? (
-        <button onClick={async () => setKey(await createPassKey())}>Create this device's pass key</button>
+        <button onClick={async () => setKey(await createPassKey())}>{t.createKey}</button>
       ) : (
         <>
           <p className="small">
-            Pass key to register at check-in (sha-256 of the device public key):
+            {t.passKeyLabel}
             <br />
             <code className="mono">{toHex(key.passKey)}</code>
           </p>
           {qr && <img className="qr" src={qr} alt="gate pass QR" />}
-          <p className="small">Re-signs in {left}s — screenshots expire.</p>
+          <p className="small">{t.resigns(left)}</p>
         </>
       )}
     </main>
@@ -172,6 +169,7 @@ function Pass() {
 // --- gate: offline scanner ---------------------------------------------------
 
 function Gate() {
+  const { t } = useI18n();
   const { ledger, error } = useLedger(DEPLOYMENT.network, DEPLOYMENT.contract);
   const [show, setShow] = useState(DEPLOYMENT.showId);
   const [extra, setExtra] = useState('');
@@ -226,25 +224,22 @@ function Gate() {
 
   return (
     <main className="narrow">
-      <h2>Gate scanner</h2>
-      <p>
-        Syncs the on-chain pass list before doors open, then works offline. It learns only “valid, not yet admitted” —
-        never a name.
-      </p>
+      <h2>{t.gateTitle}</h2>
+      <p>{t.gateBody}</p>
       <label>
-        Show id <input className="mono" value={show} onChange={(e) => setShow(e.target.value.trim())} />
+        {t.showId} <input className="mono" value={show} onChange={(e) => setShow(e.target.value.trim())} />
       </label>
       <p className="small">
-        {error ? <span className="warn">offline: {error}</span> : `${registered.size} pass keys synced from the chain`}
+        {error ? <span className="warn">{t.offline}: {error}</span> : t.synced(registered.size)}
       </p>
       <details>
-        <summary className="small">Add pass keys manually (local demo)</summary>
+        <summary className="small">{t.addManual}</summary>
         <textarea className="mono" rows={3} value={extra} onChange={(e) => setExtra(e.target.value)} />
       </details>
-      {!scanning ? <button onClick={() => setScanning(true)}>Start camera</button> : <video ref={video} className="cam" muted playsInline />}
+      {!scanning ? <button onClick={() => setScanning(true)}>{t.startCamera}</button> : <video ref={video} className="cam" muted playsInline />}
       {verdict && (
         <div className={`verdict ${verdict.ok ? 'ok' : 'no'}`}>
-          {verdict.ok ? 'ADMIT' : `REFUSE — ${verdict.reason}`}
+          {verdict.ok ? t.admit : `${t.refuse} — ${t.reasons[verdict.reason]}`}
           <span className="small"> · {verdict.ms} ms</span>
         </div>
       )}
@@ -253,13 +248,14 @@ function Gate() {
 }
 
 function App() {
+  const { t } = useI18n();
   const route = useRoute();
   return (
     <>
       <Nav />
       {route === '/pass' ? <Pass /> : route === '/gate' ? <Gate /> : <Home />}
       <footer>
-        Built on Midnight for the Midnight Korea Hackathon 2026. Networks: {Object.keys(NETWORKS).join(' · ')}.
+        {t.footer} · {Object.keys(NETWORKS).join(' · ')}
       </footer>
     </>
   );
@@ -267,6 +263,8 @@ function App() {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <I18nProvider>
+      <App />
+    </I18nProvider>
   </StrictMode>,
 );

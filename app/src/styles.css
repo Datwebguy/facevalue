@@ -59,3 +59,6 @@ button { background: var(--accent); color: white; border: 0; border-radius: 10px
 .verdict.ok { background: var(--ok); color: #04150d; }
 .verdict.no { background: var(--no); color: #1f0508; }
 footer { text-align: center; color: var(--muted); font-size: 13px; padding: 24px 16px; border-top: 1px solid var(--line); }
+.lang { display: inline-flex; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 3px; }
+.lang button { background: transparent; color: var(--muted); padding: 6px 14px; border-radius: 9px; font-weight: 700; }
+.lang button.on { background: #2f7fe0; color: #fff; }

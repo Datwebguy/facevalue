@@ -11,7 +11,7 @@ const subtle = globalThis.crypto.subtle;
 
 const b64url = (b: Uint8Array) =>
   btoa(String.fromCharCode(...b)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-const fromB64url = (s: string) =>
+const fromB64url = (s: string): Uint8Array<ArrayBuffer> =>
   Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((s.length + 3) % 4)), (c) => c.charCodeAt(0));
 export const toHex = (b: Uint8Array) => Array.from(b, (x) => x.toString(16).padStart(2, '0')).join('');
 
@@ -25,7 +25,8 @@ export async function createPassKey(): Promise<{ keyPair: CryptoKeyPair; passKey
 }
 
 export async function passKeyOf(rawPublicKey: Uint8Array): Promise<Uint8Array> {
-  return new Uint8Array(await subtle.digest('SHA-256', rawPublicKey));
+  rawPublicKey = new Uint8Array(rawPublicKey);
+  return new Uint8Array(await subtle.digest("SHA-256", rawPublicKey as Uint8Array<ArrayBuffer>));
 }
 
 export async function signPass(privateKey: CryptoKey, rawPublicKey: Uint8Array, showIdHex: string, now = Date.now()) {
@@ -52,7 +53,7 @@ export async function verifyPass(
   const window = Number(w);
   const current = Math.floor(now / WINDOW_MS);
   if (!Number.isInteger(window) || window < current - 1 || window > current + 1) return { ok: false, reason: 'expired' };
-  let raw: Uint8Array, sig: Uint8Array;
+  let raw: Uint8Array<ArrayBuffer>, sig: Uint8Array<ArrayBuffer>;
   try {
     raw = fromB64url(pubB64);
     sig = fromB64url(sigB64);

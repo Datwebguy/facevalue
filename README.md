@@ -1,5 +1,7 @@
 # FaceValue · 정가
 
+**English** · [한국어](README.ko.md)
+
 **Anti-scalping tickets on Midnight. Every fan is verified. Nobody learns who they are.**
 
 Korea's anti-scalping law took effect on **28 August 2026**. Ticket platforms must now verify
@@ -14,7 +16,7 @@ FaceValue does the verification **without collecting anything**:
 |---|---|---|
 | **Enroll once** | An issuer checks the fan is a unique human and adds a *hashed commitment* to a Merkle registry on Midnight. | The issuer learns "one new human". The chain stores a hash. |
 | **Enter the draw** | The fan proves in zero knowledge that they are *some* registry member, once per show. No speed race, so macros are useless. | Everyone sees the entry count, not who entered. |
-| **Fair draw** | The organizer sealed its seed before entries opened. Seed + every entrant's random contribution + a public beacon picks a capacity-sized window of winners. | Anyone can recheck the draw. The organizer cannot steer it. |
+| **Fair draw** | The organizer sealed its seed before entries opened. Seed + every entrant's random contribution + a public beacon picks a capacity-sized window of winners. | Anyone can recheck the draw. The organizer cannot steer it. If it never reveals, anyone may run the draw after the deadline, and the show is marked *organizer defaulted*. |
 | **Claim at face value** | The winner pays exactly face value in **shielded** tKRW. A per-fan cap is enforced with nullifiers. | The payer's wallet and balance stay hidden. |
 | **Return = the only exit** | There is **no transfer circuit**. A ticket can only go back to the pool for an exact face-value refund. The next verified fan buys it at face value. | A scalper can't deliver a seat to a buyer: whoever holds the secrets can always claw the ticket back. |
 | **Check in at home, walk in instantly** | Check-in spends the ticket on-chain and registers a fresh device key. At the door the phone shows a QR code re-signed every 30 s. The gate checks the signature offline in milliseconds. | The venue learns "valid, not yet admitted". No name, no ID, no face. |
@@ -39,8 +41,6 @@ FaceValue does the verification **without collecting anything**:
   fresh wallet per refund.
 - **Handing over the phone.** Anyone holding the fan's secrets *and* device can enter. Selling
   them is still pointless, because the seller can always claw the ticket back.
-- **Organizer that never reveals its seed.** The fallback (beacon-only draw after a deadline)
-  is on the roadmap.
 - **Contention.** Every purchase updates one treasury coin, so purchases in the same block
   conflict and one retries.
 
@@ -48,7 +48,7 @@ FaceValue does the verification **without collecting anything**:
 
 ```bash
 npm install
-npm test                 # 20 tests: contract simulator + gate-pass crypto
+npm test                 # 22 tests: contract simulator + gate-pass crypto
 npm run attack           # adversarial scripts against the compiled circuits
 npm run localnet         # local Midnight node, indexer, proof server (Docker)
 npm run e2e -- local     # full lifecycle with real proofs, writes docs/evidence/local-run.json

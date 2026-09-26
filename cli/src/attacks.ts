@@ -14,12 +14,12 @@ const world = (fanCount: number, capacity = 2n) => {
   const organizer = makeActor('organizer');
   const sim = new FaceValueSim(issuer);
   const fans: Actor[] = Array.from({ length: fanCount }, (_, i) => makeActor(`fan${i}`));
-  for (const f of fans) sim.as(issuer, (c, ctx) => c.enroll(ctx, pureCircuits.fanLeaf(f.state.fanSecret)));
+  sim.enroll(...fans);
   const showId = randomBytes(32);
   sim.as(organizer, (c, ctx) => c.createShow(ctx, showId, FACE, capacity, 2n, pureCircuits.seedCommitment(SEED, SALT), 1n));
   const draw = (entrants: Actor[]) => {
     for (const f of entrants) sim.as(f, (c, ctx) => c.enterDraw(ctx, showId));
-    sim.as(organizer, (c, ctx) => c.closeEntries(ctx, showId));
+    sim.as(organizer, (c, ctx) => c.advance(ctx, showId));
     sim.as(organizer, (c, ctx) => c.revealDraw(ctx, showId, SEED, SALT, 42n));
     const s = sim.show(showId);
     return entrants.filter((_, i) => pureCircuits.windowPosition(BigInt(i), s.offset, s.entries) < s.capacity);
@@ -81,7 +81,7 @@ const attacks: Record<string, { title: string; run: () => boolean }> = {
     run: () => {
       const w = world(4);
       for (const f of w.fans) w.sim.as(f, (c, ctx) => c.enterDraw(ctx, w.showId));
-      w.sim.as(w.organizer, (c, ctx) => c.closeEntries(ctx, w.showId));
+      w.sim.as(w.organizer, (c, ctx) => c.advance(ctx, w.showId));
       return blocked('reveal with a different seed than the sealed one', () =>
         w.sim.as(w.organizer, (c, ctx) => c.revealDraw(ctx, w.showId, SEED + 1n, SALT, 42n)),
       );

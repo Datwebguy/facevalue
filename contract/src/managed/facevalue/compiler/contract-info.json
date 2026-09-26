@@ -243,36 +243,6 @@
       }
     },
     {
-      "name": "tkrwColor",
-      "pure": false,
-      "proof": true,
-      "arguments": [
-      ],
-      "result-type": {
-        "type-name": "Bytes",
-        "length": 32
-      }
-    },
-    {
-      "name": "enroll",
-      "pure": false,
-      "proof": true,
-      "arguments": [
-        {
-          "name": "leaf",
-          "type": {
-            "type-name": "Bytes",
-            "length": 32
-          }
-        }
-      ],
-      "result-type": {
-        "type-name": "Tuple",
-        "types": [
-        ]
-      }
-    },
-    {
       "name": "enrollBatch",
       "pure": false,
       "proof": true,
@@ -350,25 +320,6 @@
       }
     },
     {
-      "name": "closeEntries",
-      "pure": false,
-      "proof": true,
-      "arguments": [
-        {
-          "name": "showId",
-          "type": {
-            "type-name": "Bytes",
-            "length": 32
-          }
-        }
-      ],
-      "result-type": {
-        "type-name": "Tuple",
-        "types": [
-        ]
-      }
-    },
-    {
       "name": "revealDraw",
       "pure": false,
       "proof": true,
@@ -409,26 +360,7 @@
       }
     },
     {
-      "name": "openSale",
-      "pure": false,
-      "proof": true,
-      "arguments": [
-        {
-          "name": "showId",
-          "type": {
-            "type-name": "Bytes",
-            "length": 32
-          }
-        }
-      ],
-      "result-type": {
-        "type-name": "Tuple",
-        "types": [
-        ]
-      }
-    },
-    {
-      "name": "closeShow",
+      "name": "advance",
       "pure": false,
       "proof": true,
       "arguments": [
@@ -654,47 +586,6 @@
         "types": [
         ]
       }
-    },
-    {
-      "name": "faucet",
-      "pure": false,
-      "proof": true,
-      "arguments": [
-        {
-          "name": "amount",
-          "type": {
-            "type-name": "Uint",
-            "maxval": 18446744073709551615
-          }
-        }
-      ],
-      "result-type": {
-        "type-name": "Struct",
-        "name": "ShieldedCoinInfo",
-        "elements": [
-          {
-            "name": "nonce",
-            "type": {
-              "type-name": "Bytes",
-              "length": 32
-            }
-          },
-          {
-            "name": "color",
-            "type": {
-              "type-name": "Bytes",
-              "length": 32
-            }
-          },
-          {
-            "name": "value",
-            "type": {
-              "type-name": "Uint",
-              "maxval": 340282366920938463463374607431768211455
-            }
-          }
-        ]
-      }
     }
   ],
   "witnesses": [
@@ -913,8 +804,18 @@
       }
     },
     {
-      "name": "fans",
+      "name": "payToken",
       "index": 1,
+      "exported": true,
+      "storage": "Cell",
+      "type": {
+        "type-name": "Bytes",
+        "length": 32
+      }
+    },
+    {
+      "name": "fans",
+      "index": 2,
       "exported": true,
       "storage": "HistoricMerkleTree",
       "depth": 20,
@@ -925,13 +826,13 @@
     },
     {
       "name": "enrolled",
-      "index": 2,
+      "index": 3,
       "exported": true,
       "storage": "Counter"
     },
     {
       "name": "shows",
-      "index": 3,
+      "index": 4,
       "exported": true,
       "storage": "Map",
       "key": {
@@ -1073,7 +974,7 @@
     },
     {
       "name": "entryTags",
-      "index": 4,
+      "index": 5,
       "exported": true,
       "storage": "Set",
       "type": {
@@ -1083,7 +984,7 @@
     },
     {
       "name": "entryAt",
-      "index": 5,
+      "index": 6,
       "exported": true,
       "storage": "Map",
       "key": {
@@ -1097,16 +998,6 @@
     },
     {
       "name": "claimed",
-      "index": 6,
-      "exported": true,
-      "storage": "Set",
-      "type": {
-        "type-name": "Bytes",
-        "length": 32
-      }
-    },
-    {
-      "name": "slots",
       "index": 7,
       "exported": true,
       "storage": "Set",
@@ -1116,8 +1007,18 @@
       }
     },
     {
-      "name": "tickets",
+      "name": "slots",
       "index": 8,
+      "exported": true,
+      "storage": "Set",
+      "type": {
+        "type-name": "Bytes",
+        "length": 32
+      }
+    },
+    {
+      "name": "tickets",
+      "index": 9,
       "exported": true,
       "storage": "HistoricMerkleTree",
       "depth": 20,
@@ -1128,7 +1029,7 @@
     },
     {
       "name": "spent",
-      "index": 9,
+      "index": 10,
       "exported": true,
       "storage": "Set",
       "type": {
@@ -1138,7 +1039,7 @@
     },
     {
       "name": "passes",
-      "index": 10,
+      "index": 11,
       "exported": true,
       "storage": "Map",
       "key": {
@@ -1152,7 +1053,7 @@
     },
     {
       "name": "treasury",
-      "index": 11,
+      "index": 12,
       "exported": true,
       "storage": "Cell",
       "type": {
@@ -1192,27 +1093,11 @@
     },
     {
       "name": "hasTreasury",
-      "index": 12,
+      "index": 13,
       "exported": true,
       "storage": "Cell",
       "type": {
         "type-name": "Boolean"
-      }
-    },
-    {
-      "name": "mintCounter",
-      "index": 13,
-      "exported": true,
-      "storage": "Counter"
-    },
-    {
-      "name": "mintNonce",
-      "index": 14,
-      "exported": true,
-      "storage": "Cell",
-      "type": {
-        "type-name": "Bytes",
-        "length": 32
       }
     }
   ]

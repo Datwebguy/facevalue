@@ -1,0 +1,11 @@
+[17:34:52.640] [32mINFO[39m (21512): [36mInitializing wallet builder for undeployed[39m
+[17:34:52.825] [32mINFO[39m (21512): [36mCreating dust wallet with params: {"indexerClientConnection":{"indexerHttpUrl":"http://127.0.0.1:8088/api/v4/graphql","indexerWsUrl":"ws://127.0.0.1:8088/api/v4/graphql/ws"},"provingServerUrl":"http://127.0.0.1:6300/","networkId":"undeployed","relayURL":"ws://127.0.0.1:9944/","txHistoryStorage":{"storage":{}},"costParameters":{"ledgerParams":{"__wbg_ptr":4654560},"additionalFeeOverhead":"500000000000000000","feeBlocksMargin":5}}[39m
+2026-09-26 17:34:53        RPC-CORE: subscribeRuntimeVersion(): RuntimeVersion:: disconnected from ws://127.0.0.1:9944/: 1000:: Normal Closure
+2026-09-26 17:34:53        RPC-CORE: subscribeRuntimeVersion(): RuntimeVersion:: disconnected from ws://127.0.0.1:9944/: 1000:: Normal Closure
+[17:35:44.823] [32mINFO[39m (21512): [36m✔ deployed pay spike at 7a530c8d543d961861d4857211fdbf7f241820f8f14b165754f05bbfbf365978 (21751 ms)[39m
+[17:36:08.563] [32mINFO[39m (21512): [36m✔ faucet 1,000,000 tKRW in 23.7s tx 61015adccecd883b77fe290b816558d3c0d3211cf7e20b638ddafbbd55ec6f6e[39m
+[17:36:50.027] [32mINFO[39m (21512): [36m✔ pay 110,000 (first coin → treasury) in 41.5s tx 657c4a590fe025c9afb54b6204920a8150e076f2e840c5edfda0d180a3de4842[39m
+[17:37:50.266] [32mINFO[39m (21512): [36m✔ pay 110,000 (merge into treasury) in 60.2s tx 3d2065c4f88af8d52905c806aecd97ae91ff77cbef2effe7079b161e9715b209[39m
+[17:38:31.742] [32mINFO[39m (21512): [36m✔ refund 110,000 from treasury in 41.5s tx 494681d7be2cc47011d2e4a94367d85cda285e9651d631d2e25f6b7b7a489adc[39m
+[17:38:31.756] [32mINFO[39m (21512): [36mtreasury value 110000, mt_index 36, paidIn 220000, refundedOut 110000[39m
+[17:38:31.757] [32mINFO[39m (21512): [36mPAYMENT SPIKE PASSED[39m

@@ -11,3 +11,4 @@ logs/
 *-private-state*/
 midnight-level-db/
 logs-compile.txt
+logs-e2e.txt

@@ -3,7 +3,7 @@
 // Every ticket holder is a verified, unique human, yet nobody (issuer, organizer,
 // venue, or chain observer) learns which human holds which ticket.
 //
-//   enroll        issuer adds a fan's commitment to the verified-fan registry
+//   enrollBatch   issuer adds a fan's commitment to the verified-fan registry
 //   enterDraw     a verified fan enters a show's draw once (no speed race, no macros)
 //   revealDraw    organizer opens its sealed seed; winners are a fair window of entries
 //   claimTicket   a winner pays face value and receives a ticket bound to their credential
@@ -50,6 +50,7 @@ export struct Show {
 // ---------------------------------------------------------------------------
 
 export sealed ledger issuer: Bytes<32>;
+export sealed ledger payToken: Bytes<32>;   // color of the shielded currency tickets are priced in
 
 // Verified-fan registry. Leaves are hashes of a fan secret; membership is proven
 // with a Merkle path, so a proof never reveals which leaf is yours.
@@ -69,8 +70,6 @@ export ledger passes: Map<Bytes<32>, Bytes<32>>;   // gate-pass key hash -> show
 
 export ledger treasury: QualifiedShieldedCoinInfo;
 export ledger hasTreasury: Boolean;
-export ledger mintCounter: Counter;
-export ledger mintNonce: Bytes<32>;
 
 // ---------------------------------------------------------------------------
 // Witnesses (run on the user's device, never disclosed unless stated)
@@ -84,8 +83,9 @@ witness entryContribution(): Uint<32>;
 witness entryIndexOf(showId: Bytes<32>, tag: Bytes<32>): Uint<32>;
 witness divRem(total: Uint<96>, n: Uint<32>): [Uint<96>, Uint<32>];
 
-constructor(issuerKey: Bytes<32>) {
+constructor(issuerKey: Bytes<32>, currency: Bytes<32>) {
   issuer = disclose(issuerKey);
+  payToken = disclose(currency);
   hasTreasury = false;
 }
 
@@ -192,19 +192,11 @@ circuit mintTicket(id: Bytes<32>, s: Show, fsk: Bytes<32>, slot: Uint<8>): [] {
   tickets.insert(disclose(ticketCommit(id, fsk, slot)));
 }
 
-pure circuit tkrwDomain(): Bytes<32> {
-  return pad(32, "facevalue:tKRW");
-}
-
-export circuit tkrwColor(): Bytes<32> {
-  return tokenType(tkrwDomain(), kernel.self());
-}
-
 // Takes exactly `amount` in shielded tKRW into the contract treasury.
 // The payer's wallet and remaining balance stay shielded.
 circuit takePayment(coin: ShieldedCoinInfo, amount: Uint<64>): [] {
   const c = disclose(coin);
-  assert(c.color == tkrwColor(), "pay in tKRW");
+  assert(c.color == payToken, "pay in the show currency");
   assert(c.value == (amount as Uint<128>), "pay exactly face value");
   receiveShielded(c);
   if (hasTreasury) {
@@ -236,12 +228,6 @@ circuit payOut(amount: Uint<128>): [] {
 // ---------------------------------------------------------------------------
 // Issuer
 // ---------------------------------------------------------------------------
-
-export circuit enroll(leaf: Bytes<32>): [] {
-  requireRole(issuer);
-  fans.insert(disclose(leaf));
-  enrolled.increment(1);
-}
 
 // Batched enrollment blurs the link between "passport verified at time t" and
 // "first ticket action at time t". Empty (all-zero) leaves are skipped.
@@ -292,14 +278,6 @@ export circuit createShow(
   });
 }
 
-export circuit closeEntries(showId: Bytes<32>): [] {
-  const id = disclose(showId);
-  const s = requireShow(id);
-  requireRole(s.organizer);
-  assert(s.phase == Phase.draw, "entries are not open");
-  shows.insert(id, Show { ...s, phase: Phase.closing });
-}
-
 // Opens the sealed seed. The window offset is (seed + entropy + beacon) mod entries;
 // the division is supplied by a witness and checked here.
 export circuit revealDraw(showId: Bytes<32>, seed: Uint<32>, salt: Bytes<32>, beacon: Uint<32>): [] {
@@ -320,22 +298,25 @@ export circuit revealDraw(showId: Bytes<32>, seed: Uint<32>, salt: Bytes<32>, be
   shows.insert(id, Show { ...s, phase: Phase.drawn, seed: sd, beacon: b, offset: r });
 }
 
-// After the claim window, every unclaimed seat joins the face-value pool.
-export circuit openSale(showId: Bytes<32>): [] {
+// One organizer control to move a show forward:
+//   draw    -> closing  (entries closed; the sealed seed can now be opened)
+//   drawn   -> sale     (claim window over; every unclaimed seat joins the face-value pool)
+//   sale    -> closed   (no more sales, returns or check-ins; revenue unlocks)
+export circuit advance(showId: Bytes<32>): [] {
   const id = disclose(showId);
   const s = requireShow(id);
   requireRole(s.organizer);
-  assert(s.phase == Phase.drawn, "draw has not happened");
-  const unclaimed = (s.capacity - s.issued) as Uint<32>;
-  shows.insert(id, Show { ...s, phase: Phase.sale, pool: (s.pool + unclaimed) as Uint<32> });
-}
-
-export circuit closeShow(showId: Bytes<32>): [] {
-  const id = disclose(showId);
-  const s = requireShow(id);
-  requireRole(s.organizer);
-  assert(s.phase != Phase.closed, "already closed");
-  shows.insert(id, Show { ...s, phase: Phase.closed });
+  assert(s.phase == Phase.draw || s.phase == Phase.drawn || s.phase == Phase.sale, "cannot advance from this phase");
+  if (s.phase == Phase.draw) {
+    shows.insert(id, Show { ...s, phase: Phase.closing });
+  } else {
+    if (s.phase == Phase.drawn) {
+      const unclaimed = (s.capacity - s.issued) as Uint<32>;
+      shows.insert(id, Show { ...s, phase: Phase.sale, pool: (s.pool + unclaimed) as Uint<32> });
+    } else {
+      shows.insert(id, Show { ...s, phase: Phase.closed });
+    }
+  }
 }
 
 // Revenue is only withdrawable once the show is closed, so the treasury can
@@ -441,18 +422,3 @@ export circuit checkIn(showId: Bytes<32>, slot: Uint<8>, passKey: Bytes<32>): []
   shows.insert(id, Show { ...s, checkedIn: (s.checkedIn + 1) as Uint<32> });
 }
 
-// ---------------------------------------------------------------------------
-// Test currency (testnet only): shielded tKRW minted to the caller.
-// ---------------------------------------------------------------------------
-
-export circuit faucet(amount: Uint<64>): ShieldedCoinInfo {
-  assert(disclose(amount <= 10000000), "faucet limit is 10,000,000 tKRW");
-  mintCounter.increment(1);
-  mintNonce = evolveNonce(mintCounter.read() as Uint<128>, mintNonce);
-  return mintShieldedToken(
-    tkrwDomain(),
-    disclose(amount),
-    mintNonce,
-    left<ZswapCoinPublicKey, ContractAddress>(ownPublicKey())
-  );
-}

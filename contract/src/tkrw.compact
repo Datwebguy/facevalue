@@ -1,0 +1,21 @@
+// tKRW — test won stablecoin (testnet only). Anyone can mint shielded tKRW to
+// their own wallet. FaceValue prices tickets in this token's color.
+
+pragma language_version 0.23;
+
+import CompactStandardLibrary;
+
+export ledger mintCounter: Counter;
+export ledger mintNonce: Bytes<32>;
+
+export circuit mint(amount: Uint<64>): ShieldedCoinInfo {
+  assert(disclose(amount <= 10000000), "faucet limit is 10,000,000 tKRW");
+  mintCounter.increment(1);
+  mintNonce = evolveNonce(mintCounter.read() as Uint<128>, mintNonce);
+  return mintShieldedToken(
+    pad(32, "facevalue:tKRW"),
+    disclose(amount),
+    mintNonce,
+    left<ZswapCoinPublicKey, ContractAddress>(ownPublicKey())
+  );
+}

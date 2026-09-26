@@ -46,8 +46,6 @@ export type Witnesses<PS> = {
 }
 
 export type ImpureCircuits<PS> = {
-  tkrwColor(context: __compactRuntime.CircuitContext<PS>): __compactRuntime.CircuitResults<PS, Uint8Array>;
-  enroll(context: __compactRuntime.CircuitContext<PS>, leaf_0: Uint8Array): __compactRuntime.CircuitResults<PS, []>;
   enrollBatch(context: __compactRuntime.CircuitContext<PS>,
               leaves_0: Uint8Array[]): __compactRuntime.CircuitResults<PS, []>;
   createShow(context: __compactRuntime.CircuitContext<PS>,
@@ -57,15 +55,12 @@ export type ImpureCircuits<PS> = {
              perFanCap_0: bigint,
              seedCommit_0: Uint8Array,
              beaconRound_0: bigint): __compactRuntime.CircuitResults<PS, []>;
-  closeEntries(context: __compactRuntime.CircuitContext<PS>,
-               showId_0: Uint8Array): __compactRuntime.CircuitResults<PS, []>;
   revealDraw(context: __compactRuntime.CircuitContext<PS>,
              showId_0: Uint8Array,
              seed_0: bigint,
              salt_0: Uint8Array,
              beacon_0: bigint): __compactRuntime.CircuitResults<PS, []>;
-  openSale(context: __compactRuntime.CircuitContext<PS>, showId_0: Uint8Array): __compactRuntime.CircuitResults<PS, []>;
-  closeShow(context: __compactRuntime.CircuitContext<PS>, showId_0: Uint8Array): __compactRuntime.CircuitResults<PS, []>;
+  advance(context: __compactRuntime.CircuitContext<PS>, showId_0: Uint8Array): __compactRuntime.CircuitResults<PS, []>;
   withdraw(context: __compactRuntime.CircuitContext<PS>, showId_0: Uint8Array): __compactRuntime.CircuitResults<PS, []>;
   enterDraw(context: __compactRuntime.CircuitContext<PS>, showId_0: Uint8Array): __compactRuntime.CircuitResults<PS, []>;
   claimTicket(context: __compactRuntime.CircuitContext<PS>,
@@ -83,15 +78,9 @@ export type ImpureCircuits<PS> = {
           showId_0: Uint8Array,
           slot_0: bigint,
           passKey_0: Uint8Array): __compactRuntime.CircuitResults<PS, []>;
-  faucet(context: __compactRuntime.CircuitContext<PS>, amount_0: bigint): __compactRuntime.CircuitResults<PS, { nonce: Uint8Array,
-                                                                                                                color: Uint8Array,
-                                                                                                                value: bigint
-                                                                                                              }>;
 }
 
 export type ProvableCircuits<PS> = {
-  tkrwColor(context: __compactRuntime.CircuitContext<PS>): __compactRuntime.CircuitResults<PS, Uint8Array>;
-  enroll(context: __compactRuntime.CircuitContext<PS>, leaf_0: Uint8Array): __compactRuntime.CircuitResults<PS, []>;
   enrollBatch(context: __compactRuntime.CircuitContext<PS>,
               leaves_0: Uint8Array[]): __compactRuntime.CircuitResults<PS, []>;
   createShow(context: __compactRuntime.CircuitContext<PS>,
@@ -101,15 +90,12 @@ export type ProvableCircuits<PS> = {
              perFanCap_0: bigint,
              seedCommit_0: Uint8Array,
              beaconRound_0: bigint): __compactRuntime.CircuitResults<PS, []>;
-  closeEntries(context: __compactRuntime.CircuitContext<PS>,
-               showId_0: Uint8Array): __compactRuntime.CircuitResults<PS, []>;
   revealDraw(context: __compactRuntime.CircuitContext<PS>,
              showId_0: Uint8Array,
              seed_0: bigint,
              salt_0: Uint8Array,
              beacon_0: bigint): __compactRuntime.CircuitResults<PS, []>;
-  openSale(context: __compactRuntime.CircuitContext<PS>, showId_0: Uint8Array): __compactRuntime.CircuitResults<PS, []>;
-  closeShow(context: __compactRuntime.CircuitContext<PS>, showId_0: Uint8Array): __compactRuntime.CircuitResults<PS, []>;
+  advance(context: __compactRuntime.CircuitContext<PS>, showId_0: Uint8Array): __compactRuntime.CircuitResults<PS, []>;
   withdraw(context: __compactRuntime.CircuitContext<PS>, showId_0: Uint8Array): __compactRuntime.CircuitResults<PS, []>;
   enterDraw(context: __compactRuntime.CircuitContext<PS>, showId_0: Uint8Array): __compactRuntime.CircuitResults<PS, []>;
   claimTicket(context: __compactRuntime.CircuitContext<PS>,
@@ -127,10 +113,6 @@ export type ProvableCircuits<PS> = {
           showId_0: Uint8Array,
           slot_0: bigint,
           passKey_0: Uint8Array): __compactRuntime.CircuitResults<PS, []>;
-  faucet(context: __compactRuntime.CircuitContext<PS>, amount_0: bigint): __compactRuntime.CircuitResults<PS, { nonce: Uint8Array,
-                                                                                                                color: Uint8Array,
-                                                                                                                value: bigint
-                                                                                                              }>;
 }
 
 export type PureCircuits = {
@@ -173,8 +155,6 @@ export type Circuits<PS> = {
                  index_0: bigint,
                  offset_0: bigint,
                  n_0: bigint): __compactRuntime.CircuitResults<PS, bigint>;
-  tkrwColor(context: __compactRuntime.CircuitContext<PS>): __compactRuntime.CircuitResults<PS, Uint8Array>;
-  enroll(context: __compactRuntime.CircuitContext<PS>, leaf_0: Uint8Array): __compactRuntime.CircuitResults<PS, []>;
   enrollBatch(context: __compactRuntime.CircuitContext<PS>,
               leaves_0: Uint8Array[]): __compactRuntime.CircuitResults<PS, []>;
   createShow(context: __compactRuntime.CircuitContext<PS>,
@@ -184,15 +164,12 @@ export type Circuits<PS> = {
              perFanCap_0: bigint,
              seedCommit_0: Uint8Array,
              beaconRound_0: bigint): __compactRuntime.CircuitResults<PS, []>;
-  closeEntries(context: __compactRuntime.CircuitContext<PS>,
-               showId_0: Uint8Array): __compactRuntime.CircuitResults<PS, []>;
   revealDraw(context: __compactRuntime.CircuitContext<PS>,
              showId_0: Uint8Array,
              seed_0: bigint,
              salt_0: Uint8Array,
              beacon_0: bigint): __compactRuntime.CircuitResults<PS, []>;
-  openSale(context: __compactRuntime.CircuitContext<PS>, showId_0: Uint8Array): __compactRuntime.CircuitResults<PS, []>;
-  closeShow(context: __compactRuntime.CircuitContext<PS>, showId_0: Uint8Array): __compactRuntime.CircuitResults<PS, []>;
+  advance(context: __compactRuntime.CircuitContext<PS>, showId_0: Uint8Array): __compactRuntime.CircuitResults<PS, []>;
   withdraw(context: __compactRuntime.CircuitContext<PS>, showId_0: Uint8Array): __compactRuntime.CircuitResults<PS, []>;
   enterDraw(context: __compactRuntime.CircuitContext<PS>, showId_0: Uint8Array): __compactRuntime.CircuitResults<PS, []>;
   claimTicket(context: __compactRuntime.CircuitContext<PS>,
@@ -210,14 +187,11 @@ export type Circuits<PS> = {
           showId_0: Uint8Array,
           slot_0: bigint,
           passKey_0: Uint8Array): __compactRuntime.CircuitResults<PS, []>;
-  faucet(context: __compactRuntime.CircuitContext<PS>, amount_0: bigint): __compactRuntime.CircuitResults<PS, { nonce: Uint8Array,
-                                                                                                                color: Uint8Array,
-                                                                                                                value: bigint
-                                                                                                              }>;
 }
 
 export type Ledger = {
   readonly issuer: Uint8Array;
+  readonly payToken: Uint8Array;
   fans: {
     isFull(): boolean;
     checkRoot(rt_0: { field: bigint }): boolean;
@@ -288,8 +262,6 @@ export type Ledger = {
                        mt_index: bigint
                      };
   readonly hasTreasury: boolean;
-  readonly mintCounter: bigint;
-  readonly mintNonce: Uint8Array;
 }
 
 export type ContractReferenceLocations = any;
@@ -303,7 +275,8 @@ export declare class Contract<PS = any, W extends Witnesses<PS> = Witnesses<PS>>
   provableCircuits: ProvableCircuits<PS>;
   constructor(witnesses: W);
   initialState(context: __compactRuntime.ConstructorContext<PS>,
-               issuerKey_0: Uint8Array): __compactRuntime.ConstructorResult<PS>;
+               issuerKey_0: Uint8Array,
+               currency_0: Uint8Array): __compactRuntime.ConstructorResult<PS>;
 }
 
 export declare function ledger(state: __compactRuntime.StateValue | __compactRuntime.ChargedState): Ledger;

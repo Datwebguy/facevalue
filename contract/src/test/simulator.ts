@@ -28,10 +28,13 @@ export class FaceValueSim {
   readonly contract = new Contract<FaceValuePrivateState>(witnesses);
   ctx: CircuitContext<FaceValuePrivateState>;
 
+  readonly currency = randomBytes(32);
+
   constructor(readonly issuer: Actor) {
     const init = this.contract.initialState(
       createConstructorContext(issuer.state, issuer.coinPublicKey),
       pureCircuits.rolePk(issuer.state.roleSecret),
+      this.currency,
     );
     this.ctx = {
       currentPrivateState: init.currentPrivateState,
@@ -57,16 +60,20 @@ export class FaceValueSim {
     return out.result;
   }
 
+  enroll(...fans: Actor[]) {
+    for (let i = 0; i < fans.length; i += 4) {
+      const leaves = fans.slice(i, i + 4).map((f) => pureCircuits.fanLeaf(f.state.fanSecret));
+      while (leaves.length < 4) leaves.push(new Uint8Array(32));
+      this.as(this.issuer, (c, ctx) => c.enrollBatch(ctx, leaves));
+    }
+  }
+
   show(id: Uint8Array) {
     return this.ledger.shows.lookup(id);
   }
 
-  tkrw(): Uint8Array {
-    return this.as(this.issuer, (c, ctx) => c.tkrwColor(ctx));
-  }
-
   /** A fresh shielded coin of `value` tKRW, as a wallet would build it for a payment. */
   coin(value: bigint) {
-    return { nonce: randomBytes(32), color: this.tkrw(), value };
+    return { nonce: randomBytes(32), color: this.currency, value };
   }
 }

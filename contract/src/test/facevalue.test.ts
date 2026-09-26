@@ -12,7 +12,7 @@ const setup = (fanCount: number, capacity = 3n, perFanCap = 2n) => {
   const organizer = makeActor('organizer');
   const sim = new FaceValueSim(issuer);
   const fans: Actor[] = Array.from({ length: fanCount }, (_, i) => makeActor(`fan${i}`));
-  for (const f of fans) sim.as(issuer, (c, ctx) => c.enroll(ctx, pureCircuits.fanLeaf(f.state.fanSecret)));
+  sim.enroll(...fans);
   const showId = randomBytes(32);
   sim.as(organizer, (c, ctx) =>
     c.createShow(ctx, showId, FACE, capacity, perFanCap, pureCircuits.seedCommitment(SEED, SALT), 5_000_000n),
@@ -22,7 +22,7 @@ const setup = (fanCount: number, capacity = 3n, perFanCap = 2n) => {
 
 const runDraw = (t: ReturnType<typeof setup>, entrants: Actor[]) => {
   for (const f of entrants) t.sim.as(f, (c, ctx) => c.enterDraw(ctx, t.showId));
-  t.sim.as(t.organizer, (c, ctx) => c.closeEntries(ctx, t.showId));
+  t.sim.as(t.organizer, (c, ctx) => c.advance(ctx, t.showId));
   t.sim.as(t.organizer, (c, ctx) => c.revealDraw(ctx, t.showId, SEED, SALT, BEACON));
   const s = t.sim.show(t.showId);
   const winners: Actor[] = [];
@@ -38,7 +38,7 @@ describe('registry', () => {
   it('only the issuer can enroll fans', () => {
     const { sim } = setup(0);
     const mallory = makeActor('mallory');
-    expect(() => sim.as(mallory, (c, ctx) => c.enroll(ctx, pureCircuits.fanLeaf(mallory.state.fanSecret)))).toThrow(
+    expect(() => sim.as(mallory, (c, ctx) => c.enrollBatch(ctx, [pureCircuits.fanLeaf(mallory.state.fanSecret), new Uint8Array(32), new Uint8Array(32), new Uint8Array(32)]))).toThrow(
       /not authorized/,
     );
   });
@@ -67,15 +67,15 @@ describe('draw', () => {
   it('the organizer cannot open a different seed than it committed to', () => {
     const t = setup(3);
     for (const f of t.fans) t.sim.as(f, (c, ctx) => c.enterDraw(ctx, t.showId));
-    t.sim.as(t.organizer, (c, ctx) => c.closeEntries(ctx, t.showId));
+    t.sim.as(t.organizer, (c, ctx) => c.advance(ctx, t.showId));
     expect(() => t.sim.as(t.organizer, (c, ctx) => c.revealDraw(ctx, t.showId, SEED + 1n, SALT, BEACON))).toThrow(
       /does not match its commitment/,
     );
   });
 
-  it('only the organizer can close and reveal', () => {
+  it('only the organizer can advance the show', () => {
     const t = setup(1);
-    expect(() => t.sim.as(t.fans[0], (c, ctx) => c.closeEntries(ctx, t.showId))).toThrow(/not authorized/);
+    expect(() => t.sim.as(t.fans[0], (c, ctx) => c.advance(ctx, t.showId))).toThrow(/not authorized/);
   });
 
   it('picks exactly `capacity` winners out of the entrants', () => {
@@ -147,7 +147,7 @@ describe('face-value pool', () => {
   });
 
   it('pool sales happen only at face value, only to verified fans, within the per-fan cap', () => {
-    t.sim.as(t.organizer, (c, ctx) => c.openSale(ctx, t.showId));
+    t.sim.as(t.organizer, (c, ctx) => c.advance(ctx, t.showId));
     expect(t.sim.show(t.showId).pool).toBe(0n); // both seats were claimed
     const holder = t.fans.slice(0, 3).find((f) => {
       try {
@@ -171,7 +171,7 @@ describe('face-value pool', () => {
   });
 
   it('a fan can never exceed the per-fan cap, whatever slot numbers they try', () => {
-    t.sim.as(t.organizer, (c, ctx) => c.openSale(ctx, t.showId));
+    t.sim.as(t.organizer, (c, ctx) => c.advance(ctx, t.showId));
     // free up seats
     for (const f of t.fans.slice(0, 3)) {
       try {
@@ -219,7 +219,7 @@ describe('organizer revenue', () => {
     const { winners } = runDraw(t, t.fans);
     t.sim.as(winners[0], (c, ctx) => c.claimTicket(ctx, t.showId, 0n, t.sim.coin(FACE)));
     expect(() => t.sim.as(t.organizer, (c, ctx) => c.withdraw(ctx, t.showId))).toThrow(/close the show first/);
-    t.sim.as(t.organizer, (c, ctx) => c.closeShow(ctx, t.showId));
+    t.sim.as(t.organizer, (c, ctx) => c.advance(ctx, t.showId));
     expect(() => t.sim.as(winners[0], (c, ctx) => c.withdraw(ctx, t.showId))).toThrow(/not authorized/);
   });
 });

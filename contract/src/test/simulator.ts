@@ -68,6 +68,12 @@ export class FaceValueSim {
     }
   }
 
+  /** Moves the simulated block clock (seconds since epoch). */
+  setTime(seconds: number) {
+    const q = this.ctx.currentQueryContext as unknown as { block: Record<string, unknown> };
+    q.block = { ...q.block, secondsSinceEpoch: BigInt(seconds), lastBlockTime: BigInt(seconds) };
+  }
+
   show(id: Uint8Array) {
     return this.ledger.shows.lookup(id);
   }

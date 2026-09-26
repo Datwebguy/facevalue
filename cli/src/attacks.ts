@@ -8,6 +8,7 @@ import { FaceValueSim, makeActor, randomBytes, type Actor } from '../../contract
 const FACE = 110_000n;
 const SEED = 777n;
 const SALT = randomBytes(32);
+const REVEAL_BY = 2_000_000_000n; // block time (seconds) after which anyone may run the draw
 
 const world = (fanCount: number, capacity = 2n) => {
   const issuer = makeActor('issuer');
@@ -16,7 +17,7 @@ const world = (fanCount: number, capacity = 2n) => {
   const fans: Actor[] = Array.from({ length: fanCount }, (_, i) => makeActor(`fan${i}`));
   sim.enroll(...fans);
   const showId = randomBytes(32);
-  sim.as(organizer, (c, ctx) => c.createShow(ctx, showId, FACE, capacity, 2n, pureCircuits.seedCommitment(SEED, SALT), 1n));
+  sim.as(organizer, (c, ctx) => c.createShow(ctx, showId, FACE, capacity, 2n, pureCircuits.seedCommitment(SEED, SALT), 1n, REVEAL_BY));
   const draw = (entrants: Actor[]) => {
     for (const f of entrants) sim.as(f, (c, ctx) => c.enterDraw(ctx, showId));
     sim.as(organizer, (c, ctx) => c.advance(ctx, showId));

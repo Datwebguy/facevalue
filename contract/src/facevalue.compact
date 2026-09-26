@@ -33,6 +33,8 @@ export struct Show {
   phase: Phase;
   seedCommit: Bytes<32>;    // organizer's sealed seed, fixed before any entry
   beaconRound: Uint<64>;    // public drand round announced at creation
+  revealBy: Uint<64>;       // block time after which anyone may run the draw without the organizer
+  organizerDefaulted: Boolean; // true if the organizer missed its reveal and the fallback ran
   beacon: Uint<32>;         // beacon value posted at reveal (checkable off-chain)
   seed: Uint<32>;           // organizer seed, opened at reveal
   entropy: Uint<64>;        // sum of every entrant's random contribution
@@ -251,7 +253,8 @@ export circuit createShow(
   capacity: Uint<32>,
   perFanCap: Uint<8>,
   seedCommit: Bytes<32>,
-  beaconRound: Uint<64>
+  beaconRound: Uint<64>,
+  revealBy: Uint<64>
 ): [] {
   const id = disclose(showId);
   assert(!shows.member(id), "show already exists");
@@ -265,6 +268,8 @@ export circuit createShow(
     phase: Phase.draw,
     seedCommit: disclose(seedCommit),
     beaconRound: disclose(beaconRound),
+    revealBy: disclose(revealBy),
+    organizerDefaulted: false,
     beacon: 0,
     seed: 0,
     entropy: 0,
@@ -280,14 +285,25 @@ export circuit createShow(
 
 // Opens the sealed seed. The window offset is (seed + entropy + beacon) mod entries;
 // the division is supplied by a witness and checked here.
+// Opens the sealed seed. The window offset is (seed + entropy + beacon) mod entries;
+// the division is supplied by a witness and checked here.
+//
+// Fallback: if the organizer has not revealed by `revealBy`, anyone may run the draw
+// with the entrants' entropy alone. The show is then publicly marked organizerDefaulted,
+// so an organizer cannot stall a draw it dislikes.
 export circuit revealDraw(showId: Bytes<32>, seed: Uint<32>, salt: Bytes<32>, beacon: Uint<32>): [] {
   const id = disclose(showId);
   const s = requireShow(id);
-  requireRole(s.organizer);
-  assert(s.phase == Phase.closing, "close entries before the draw");
-  const sd = disclose(seed);
-  assert(seedCommitment(sd, disclose(salt)) == s.seedCommit, "seed does not match its commitment");
-  const b = disclose(beacon);
+  const byOrganizer = disclose(rolePk(roleSecret()) == s.organizer);
+  const sd = byOrganizer ? disclose(seed) : (0 as Uint<32>);
+  const b = byOrganizer ? disclose(beacon) : (0 as Uint<32>);
+  if (byOrganizer) {
+    assert(s.phase == Phase.closing, "close entries before the draw");
+    assert(seedCommitment(sd, disclose(salt)) == s.seedCommit, "seed does not match its commitment");
+  } else {
+    assert(s.phase == Phase.draw || s.phase == Phase.closing, "draw already happened");
+    assert(blockTimeGte(s.revealBy), "the organizer still has time to reveal");
+  }
   const total = ((sd as Uint<96>) + (s.entropy as Uint<96>) + (b as Uint<96>)) as Uint<96>;
   const n = s.entries == 0 ? (1 as Uint<32>) : s.entries;
   const qr = divRem(total, n);
@@ -295,7 +311,7 @@ export circuit revealDraw(showId: Bytes<32>, seed: Uint<32>, salt: Bytes<32>, be
   const r = disclose(qr[1]);
   assert(q * n + r == total, "bad division");
   assert(r < n, "bad remainder");
-  shows.insert(id, Show { ...s, phase: Phase.drawn, seed: sd, beacon: b, offset: r });
+  shows.insert(id, Show { ...s, phase: Phase.drawn, seed: sd, beacon: b, offset: r, organizerDefaulted: !byOrganizer });
 }
 
 // One organizer control to move a show forward:

@@ -5,6 +5,7 @@ import { FaceValueSim, makeActor, randomBytes, type Actor } from './simulator.js
 const FACE = 110_000n; // ₩110,000
 const SEED = 424242n;
 const SALT = randomBytes(32);
+const REVEAL_BY = 2_000_000_000n; // block time (seconds) after which anyone may run the draw
 const BEACON = 987654321n;
 
 const setup = (fanCount: number, capacity = 3n, perFanCap = 2n) => {
@@ -15,7 +16,7 @@ const setup = (fanCount: number, capacity = 3n, perFanCap = 2n) => {
   sim.enroll(...fans);
   const showId = randomBytes(32);
   sim.as(organizer, (c, ctx) =>
-    c.createShow(ctx, showId, FACE, capacity, perFanCap, pureCircuits.seedCommitment(SEED, SALT), 5_000_000n),
+    c.createShow(ctx, showId, FACE, capacity, perFanCap, pureCircuits.seedCommitment(SEED, SALT), 5_000_000n, REVEAL_BY),
   );
   return { sim, issuer, organizer, fans, showId };
 };
@@ -84,6 +85,28 @@ describe('draw', () => {
     expect(winners).toHaveLength(3);
     expect(losers).toHaveLength(5);
     expect(t.sim.show(t.showId).phase).toBe(Phase.drawn);
+  });
+});
+
+describe('organizer that never reveals', () => {
+  it('nobody else can run the draw before the deadline', () => {
+    const t = setup(3);
+    for (const f of t.fans) t.sim.as(f, (c, ctx) => c.enterDraw(ctx, t.showId));
+    t.sim.setTime(Number(REVEAL_BY) - 60);
+    expect(() => t.sim.as(t.fans[0], (c, ctx) => c.revealDraw(ctx, t.showId, 0n, SALT, 0n))).toThrow(/still has time/);
+  });
+
+  it('after the deadline anyone can run it, and the organizer is publicly marked as defaulted', () => {
+    const t = setup(4, 2n);
+    for (const f of t.fans) t.sim.as(f, (c, ctx) => c.enterDraw(ctx, t.showId));
+    t.sim.setTime(Number(REVEAL_BY) + 1);
+    // a random fan runs it; the seed and beacon it passes are ignored
+    t.sim.as(t.fans[2], (c, ctx) => c.revealDraw(ctx, t.showId, 999n, randomBytes(32), 999n));
+    const s = t.sim.show(t.showId);
+    expect(s.phase).toBe(Phase.drawn);
+    expect(s.organizerDefaulted).toBe(true);
+    expect(s.seed).toBe(0n);
+    expect(s.offset).toBe(s.entropy % s.entries);
   });
 });
 

@@ -141,7 +141,7 @@ async function main() {
   // 3. show with a sealed seed
   const showId = rnd();
   await timed('createShow (sealed seed committed)', 'organizer', () =>
-    organizer.callTx.createShow(showId, FACE, CAPACITY, PER_FAN_CAP, pureCircuits.seedCommitment(SEED, SALT), BEACON_ROUND),
+    organizer.callTx.createShow(showId, FACE, CAPACITY, PER_FAN_CAP, pureCircuits.seedCommitment(SEED, SALT), BEACON_ROUND, BigInt(Math.floor(Date.now() / 1000) + 7 * 86400)),
   );
 
   // 4. draw

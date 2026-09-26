@@ -311,6 +311,13 @@
             "type-name": "Uint",
             "maxval": 18446744073709551615
           }
+        },
+        {
+          "name": "revealBy",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 18446744073709551615
+          }
         }
       ],
       "result-type": {
@@ -897,6 +904,19 @@
             "type": {
               "type-name": "Uint",
               "maxval": 18446744073709551615
+            }
+          },
+          {
+            "name": "revealBy",
+            "type": {
+              "type-name": "Uint",
+              "maxval": 18446744073709551615
+            }
+          },
+          {
+            "name": "organizerDefaulted",
+            "type": {
+              "type-name": "Boolean"
             }
           },
           {

@@ -9,6 +9,8 @@ export type Show = { organizer: Uint8Array;
                      phase: Phase;
                      seedCommit: Uint8Array;
                      beaconRound: bigint;
+                     revealBy: bigint;
+                     organizerDefaulted: boolean;
                      beacon: bigint;
                      seed: bigint;
                      entropy: bigint;
@@ -54,7 +56,8 @@ export type ImpureCircuits<PS> = {
              capacity_0: bigint,
              perFanCap_0: bigint,
              seedCommit_0: Uint8Array,
-             beaconRound_0: bigint): __compactRuntime.CircuitResults<PS, []>;
+             beaconRound_0: bigint,
+             revealBy_0: bigint): __compactRuntime.CircuitResults<PS, []>;
   revealDraw(context: __compactRuntime.CircuitContext<PS>,
              showId_0: Uint8Array,
              seed_0: bigint,
@@ -89,7 +92,8 @@ export type ProvableCircuits<PS> = {
              capacity_0: bigint,
              perFanCap_0: bigint,
              seedCommit_0: Uint8Array,
-             beaconRound_0: bigint): __compactRuntime.CircuitResults<PS, []>;
+             beaconRound_0: bigint,
+             revealBy_0: bigint): __compactRuntime.CircuitResults<PS, []>;
   revealDraw(context: __compactRuntime.CircuitContext<PS>,
              showId_0: Uint8Array,
              seed_0: bigint,
@@ -163,7 +167,8 @@ export type Circuits<PS> = {
              capacity_0: bigint,
              perFanCap_0: bigint,
              seedCommit_0: Uint8Array,
-             beaconRound_0: bigint): __compactRuntime.CircuitResults<PS, []>;
+             beaconRound_0: bigint,
+             revealBy_0: bigint): __compactRuntime.CircuitResults<PS, []>;
   revealDraw(context: __compactRuntime.CircuitContext<PS>,
              showId_0: Uint8Array,
              seed_0: bigint,

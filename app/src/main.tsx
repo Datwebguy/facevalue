@@ -70,8 +70,8 @@ function Home() {
 
       <section>
         <h2>{t.liveOn} {DEPLOYMENT.network}</h2>
-        <p className="mono small">
-          {t.contract} <a href={`${DEPLOYMENT.explorer}${DEPLOYMENT.contract}`} target="_blank">{DEPLOYMENT.contract}</a>
+        <p className="small">
+          <a href={`${DEPLOYMENT.explorer}${DEPLOYMENT.contract}`} target="_blank" rel="noreferrer">{t.contract} ↗</a>
         </p>
         {error && <p className="warn">{error}</p>}
         {!shows && !error && <p>{t.reading}</p>}
@@ -85,7 +85,7 @@ function Home() {
             <article key={s.id} className="card">
               <header>
                 <span className="phase">{t.phases[s.phase]}</span>
-                <span className="mono small">{t.show} {s.id.slice(0, 10)}…</span>
+                <span className="small">{t.show} #{s.id.slice(0, 4).toUpperCase()}</span>
               </header>
               <div className="price">{won(s.faceValue)}</div>
               <dl>
@@ -148,17 +148,16 @@ function Pass() {
     <main className="narrow">
       <h2>{t.passTitle}</h2>
       <p>{t.passBody}</p>
-      <label>
-        {t.showId} <input className="mono" value={show} onChange={(e) => setShow(e.target.value.trim())} />
-      </label>
+      <details>
+        <summary className="small">{t.showId} #{show.slice(0, 4).toUpperCase()}</summary>
+        <input className="mono" value={show} onChange={(e) => setShow(e.target.value.trim())} />
+      </details>
       {!key ? (
         <button onClick={async () => setKey(await createPassKey())}>{t.createKey}</button>
       ) : (
         <>
           <p className="small">
             {t.passKeyLabel}
-            <br />
-            <code className="mono">{toHex(key.passKey)}</code>
           </p>
           {qr && <img className="qr" src={qr} alt="gate pass QR" />}
           <p className="small">{t.resigns(left)}</p>
@@ -228,9 +227,10 @@ function Gate() {
     <main className="narrow">
       <h2>{t.gateTitle}</h2>
       <p>{t.gateBody}</p>
-      <label>
-        {t.showId} <input className="mono" value={show} onChange={(e) => setShow(e.target.value.trim())} />
-      </label>
+      <details>
+        <summary className="small">{t.showId} #{show.slice(0, 4).toUpperCase()}</summary>
+        <input className="mono" value={show} onChange={(e) => setShow(e.target.value.trim())} />
+      </details>
       <p className="small">
         {error ? <span className="warn">{t.offline}: {error}</span> : t.synced(registered.size)}
       </p>
@@ -242,7 +242,7 @@ function Gate() {
       {verdict && (
         <div className={`verdict ${verdict.ok ? 'ok' : 'no'}`}>
           {verdict.ok ? t.admit : `${t.refuse} — ${t.reasons[verdict.reason]}`}
-          <span className="small"> · {verdict.ms} ms</span>
+          <span className="small"> · {verdict.ms < 1000 ? `${verdict.ms} ms` : ''}</span>
         </div>
       )}
     </main>

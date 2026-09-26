@@ -1,0 +1,12 @@
+node_modules/
+dist/
+tools/
+logs/
+*.log
+.env
+.env.*
+!.env.example
+# local wallet seeds and private state stores — never commit
+.wallet/
+*-private-state*/
+midnight-level-db/

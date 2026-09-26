@@ -1,0 +1,458 @@
+// FaceValue (정가) — anti-scalping tickets on Midnight.
+//
+// Every ticket holder is a verified, unique human, yet nobody (issuer, organizer,
+// venue, or chain observer) learns which human holds which ticket.
+//
+//   enroll        issuer adds a fan's commitment to the verified-fan registry
+//   enterDraw     a verified fan enters a show's draw once (no speed race, no macros)
+//   revealDraw    organizer opens its sealed seed; winners are a fair window of entries
+//   claimTicket   a winner pays face value and receives a ticket bound to their credential
+//   returnTicket  the only way out: back to the pool, refunded at face value
+//   buyFromPool   another verified fan buys a returned / unclaimed seat at face value
+//   checkIn       spend the ticket at home, publish a one-time gate-pass key
+//
+// There is no transfer circuit. A ticket cannot be sent to a chosen person, so a
+// scalper cannot deliver a seat to a buyer — whoever holds the secrets can always
+// return the ticket for a refund, which makes any off-chain sale unenforceable.
+
+pragma language_version 0.23;
+
+import CompactStandardLibrary;
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+export enum Phase { draw, closing, drawn, sale, closed }
+
+export struct Show {
+  organizer: Bytes<32>;     // organizer role key (hash of its secret)
+  faceValue: Uint<64>;      // price in tKRW base units; resale can never exceed it
+  capacity: Uint<32>;       // seats
+  perFanCap: Uint<8>;       // max tickets one verified human can hold for this show
+  phase: Phase;
+  seedCommit: Bytes<32>;    // organizer's sealed seed, fixed before any entry
+  beaconRound: Uint<64>;    // public drand round announced at creation
+  beacon: Uint<32>;         // beacon value posted at reveal (checkable off-chain)
+  seed: Uint<32>;           // organizer seed, opened at reveal
+  entropy: Uint<64>;        // sum of every entrant's random contribution
+  entries: Uint<32>;
+  offset: Uint<32>;         // start of the winning window
+  issued: Uint<32>;         // tickets ever minted
+  pool: Uint<32>;           // seats available at face value right now
+  returned: Uint<32>;       // tickets handed back for a refund
+  checkedIn: Uint<32>;
+  revenue: Uint<128>;       // organizer balance, withdrawable after close
+}
+
+// ---------------------------------------------------------------------------
+// Public state
+// ---------------------------------------------------------------------------
+
+export sealed ledger issuer: Bytes<32>;
+
+// Verified-fan registry. Leaves are hashes of a fan secret; membership is proven
+// with a Merkle path, so a proof never reveals which leaf is yours.
+export ledger fans: HistoricMerkleTree<20, Bytes<32>>;
+export ledger enrolled: Counter;
+
+export ledger shows: Map<Bytes<32>, Show>;
+
+export ledger entryTags: Set<Bytes<32>>;           // one tag per (fan, show)
+export ledger entryAt: Map<Bytes<32>, Bytes<32>>;  // entryKey(show, index) -> tag
+export ledger claimed: Set<Bytes<32>>;             // entry tags that claimed their seat
+
+export ledger slots: Set<Bytes<32>>;               // per-fan purchase slot nullifiers
+export ledger tickets: HistoricMerkleTree<20, Bytes<32>>;
+export ledger spent: Set<Bytes<32>>;               // ticket nullifiers (returned or checked in)
+export ledger passes: Map<Bytes<32>, Bytes<32>>;   // gate-pass key hash -> show id
+
+export ledger treasury: QualifiedShieldedCoinInfo;
+export ledger hasTreasury: Boolean;
+export ledger mintCounter: Counter;
+export ledger mintNonce: Bytes<32>;
+
+// ---------------------------------------------------------------------------
+// Witnesses (run on the user's device, never disclosed unless stated)
+// ---------------------------------------------------------------------------
+
+witness roleSecret(): Bytes<32>;
+witness fanSecret(): Bytes<32>;
+witness fanPath(leaf: Bytes<32>): MerkleTreePath<20, Bytes<32>>;
+witness ticketPath(leaf: Bytes<32>): MerkleTreePath<20, Bytes<32>>;
+witness entryContribution(): Uint<32>;
+witness entryIndexOf(showId: Bytes<32>, tag: Bytes<32>): Uint<32>;
+witness divRem(total: Uint<96>, n: Uint<32>): [Uint<96>, Uint<32>];
+
+constructor(issuerKey: Bytes<32>) {
+  issuer = disclose(issuerKey);
+  hasTreasury = false;
+}
+
+// ---------------------------------------------------------------------------
+// Derivations (pure, so apps compute the same values off-chain)
+// ---------------------------------------------------------------------------
+
+export pure circuit rolePk(sk: Bytes<32>): Bytes<32> {
+  return persistentHash<Vector<2, Bytes<32>>>([pad(32, "facevalue:role:pk"), sk]);
+}
+
+export pure circuit fanLeaf(fsk: Bytes<32>): Bytes<32> {
+  return persistentHash<Vector<2, Bytes<32>>>([pad(32, "facevalue:fan:leaf"), fsk]);
+}
+
+export pure circuit entryTag(showId: Bytes<32>, fsk: Bytes<32>): Bytes<32> {
+  return persistentHash<Vector<3, Bytes<32>>>([pad(32, "facevalue:entry:tag"), showId, fsk]);
+}
+
+export pure circuit entryKey(showId: Bytes<32>, index: Uint<32>): Bytes<32> {
+  return persistentHash<Vector<3, Bytes<32>>>(
+    [pad(32, "facevalue:entry:key"), showId, (index as Field) as Bytes<32>]
+  );
+}
+
+export pure circuit slotNullifier(showId: Bytes<32>, fsk: Bytes<32>, slot: Uint<8>): Bytes<32> {
+  return persistentHash<Vector<4, Bytes<32>>>(
+    [pad(32, "facevalue:slot"), showId, fsk, (slot as Field) as Bytes<32>]
+  );
+}
+
+export pure circuit ticketCommit(showId: Bytes<32>, fsk: Bytes<32>, slot: Uint<8>): Bytes<32> {
+  return persistentHash<Vector<4, Bytes<32>>>(
+    [pad(32, "facevalue:ticket"), showId, fsk, (slot as Field) as Bytes<32>]
+  );
+}
+
+export pure circuit ticketNullifier(showId: Bytes<32>, fsk: Bytes<32>, slot: Uint<8>): Bytes<32> {
+  return persistentHash<Vector<4, Bytes<32>>>(
+    [pad(32, "facevalue:spent"), showId, fsk, (slot as Field) as Bytes<32>]
+  );
+}
+
+export pure circuit seedCommitment(seed: Uint<32>, salt: Bytes<32>): Bytes<32> {
+  return persistentHash<Vector<3, Bytes<32>>>(
+    [pad(32, "facevalue:seed"), (seed as Field) as Bytes<32>, salt]
+  );
+}
+
+// Position of an entry inside the rotating winning window. Entries whose
+// position is below capacity win; every index has the same chance.
+export pure circuit windowPosition(index: Uint<32>, offset: Uint<32>, n: Uint<32>): Uint<32> {
+  return index >= offset
+    ? (index - offset) as Uint<32>
+    : ((index + n) - offset) as Uint<32>;
+}
+
+// ---------------------------------------------------------------------------
+// Internal helpers
+// ---------------------------------------------------------------------------
+
+circuit requireRole(expected: Bytes<32>): [] {
+  assert(disclose(rolePk(roleSecret()) == expected), "not authorized");
+}
+
+circuit requireShow(id: Bytes<32>): Show {
+  assert(shows.member(id), "no such show");
+  return shows.lookup(id);
+}
+
+// Proves the caller's fan secret is in the verified registry without revealing
+// which registry entry it is.
+circuit proveFan(fsk: Bytes<32>): [] {
+  const leaf = fanLeaf(fsk);
+  const path = fanPath(leaf);
+  assert(path.leaf == leaf, "registry path does not match this fan");
+  assert(
+    fans.checkRoot(disclose(merkleTreePathRoot<20, Bytes<32>>(path))),
+    "not a verified fan"
+  );
+}
+
+// Proves ownership of an unspent ticket and spends it.
+circuit spendTicket(id: Bytes<32>, fsk: Bytes<32>, slot: Uint<8>): [] {
+  const tc = ticketCommit(id, fsk, slot);
+  const path = ticketPath(tc);
+  assert(path.leaf == tc, "ticket path does not match");
+  assert(
+    tickets.checkRoot(disclose(merkleTreePathRoot<20, Bytes<32>>(path))),
+    "no such ticket"
+  );
+  const tn = disclose(ticketNullifier(id, fsk, slot));
+  assert(!spent.member(tn), "ticket already returned or used");
+  spent.insert(tn);
+}
+
+// Consumes one of the fan's per-show slots and mints a ticket commitment.
+// The slot number itself stays private; only its nullifier is published.
+circuit mintTicket(id: Bytes<32>, s: Show, fsk: Bytes<32>, slot: Uint<8>): [] {
+  assert(disclose(slot < s.perFanCap), "per-fan ticket cap reached");
+  const sn = disclose(slotNullifier(id, fsk, slot));
+  assert(!slots.member(sn), "slot already used");
+  slots.insert(sn);
+  tickets.insert(disclose(ticketCommit(id, fsk, slot)));
+}
+
+pure circuit tkrwDomain(): Bytes<32> {
+  return pad(32, "facevalue:tKRW");
+}
+
+export circuit tkrwColor(): Bytes<32> {
+  return tokenType(tkrwDomain(), kernel.self());
+}
+
+// Takes exactly `amount` in shielded tKRW into the contract treasury.
+// The payer's wallet and remaining balance stay shielded.
+circuit takePayment(coin: ShieldedCoinInfo, amount: Uint<64>): [] {
+  const c = disclose(coin);
+  assert(c.color == tkrwColor(), "pay in tKRW");
+  assert(c.value == (amount as Uint<128>), "pay exactly face value");
+  receiveShielded(c);
+  if (hasTreasury) {
+    treasury.writeCoin(
+      mergeCoinImmediate(treasury, c),
+      right<ZswapCoinPublicKey, ContractAddress>(kernel.self())
+    );
+  } else {
+    treasury.writeCoin(c, right<ZswapCoinPublicKey, ContractAddress>(kernel.self()));
+    hasTreasury = true;
+  }
+}
+
+// Pays `amount` from the treasury to the transaction's own wallet.
+circuit payOut(amount: Uint<128>): [] {
+  assert(hasTreasury, "treasury empty");
+  const res = sendShielded(
+    treasury,
+    left<ZswapCoinPublicKey, ContractAddress>(ownPublicKey()),
+    amount
+  );
+  if (res.change.is_some) {
+    treasury.writeCoin(res.change.value, right<ZswapCoinPublicKey, ContractAddress>(kernel.self()));
+  } else {
+    hasTreasury = false;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Issuer
+// ---------------------------------------------------------------------------
+
+export circuit enroll(leaf: Bytes<32>): [] {
+  requireRole(issuer);
+  fans.insert(disclose(leaf));
+  enrolled.increment(1);
+}
+
+// Batched enrollment blurs the link between "passport verified at time t" and
+// "first ticket action at time t". Empty (all-zero) leaves are skipped.
+export circuit enrollBatch(leaves: Vector<4, Bytes<32>>): [] {
+  requireRole(issuer);
+  for (const l of leaves) {
+    if (disclose(l != default<Bytes<32>>)) {
+      fans.insert(disclose(l));
+      enrolled.increment(1);
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Organizer
+// ---------------------------------------------------------------------------
+
+export circuit createShow(
+  showId: Bytes<32>,
+  faceValue: Uint<64>,
+  capacity: Uint<32>,
+  perFanCap: Uint<8>,
+  seedCommit: Bytes<32>,
+  beaconRound: Uint<64>
+): [] {
+  const id = disclose(showId);
+  assert(!shows.member(id), "show already exists");
+  assert(disclose(capacity > 0), "capacity must be positive");
+  assert(disclose(perFanCap > 0), "per-fan cap must be positive");
+  shows.insert(id, Show {
+    organizer: disclose(rolePk(roleSecret())),
+    faceValue: disclose(faceValue),
+    capacity: disclose(capacity),
+    perFanCap: disclose(perFanCap),
+    phase: Phase.draw,
+    seedCommit: disclose(seedCommit),
+    beaconRound: disclose(beaconRound),
+    beacon: 0,
+    seed: 0,
+    entropy: 0,
+    entries: 0,
+    offset: 0,
+    issued: 0,
+    pool: 0,
+    returned: 0,
+    checkedIn: 0,
+    revenue: 0
+  });
+}
+
+export circuit closeEntries(showId: Bytes<32>): [] {
+  const id = disclose(showId);
+  const s = requireShow(id);
+  requireRole(s.organizer);
+  assert(s.phase == Phase.draw, "entries are not open");
+  shows.insert(id, Show { ...s, phase: Phase.closing });
+}
+
+// Opens the sealed seed. The window offset is (seed + entropy + beacon) mod entries;
+// the division is supplied by a witness and checked here.
+export circuit revealDraw(showId: Bytes<32>, seed: Uint<32>, salt: Bytes<32>, beacon: Uint<32>): [] {
+  const id = disclose(showId);
+  const s = requireShow(id);
+  requireRole(s.organizer);
+  assert(s.phase == Phase.closing, "close entries before the draw");
+  const sd = disclose(seed);
+  assert(seedCommitment(sd, disclose(salt)) == s.seedCommit, "seed does not match its commitment");
+  const b = disclose(beacon);
+  const total = ((sd as Uint<96>) + (s.entropy as Uint<96>) + (b as Uint<96>)) as Uint<96>;
+  const n = s.entries == 0 ? (1 as Uint<32>) : s.entries;
+  const qr = divRem(total, n);
+  const q = disclose(qr[0]);
+  const r = disclose(qr[1]);
+  assert(q * n + r == total, "bad division");
+  assert(r < n, "bad remainder");
+  shows.insert(id, Show { ...s, phase: Phase.drawn, seed: sd, beacon: b, offset: r });
+}
+
+// After the claim window, every unclaimed seat joins the face-value pool.
+export circuit openSale(showId: Bytes<32>): [] {
+  const id = disclose(showId);
+  const s = requireShow(id);
+  requireRole(s.organizer);
+  assert(s.phase == Phase.drawn, "draw has not happened");
+  const unclaimed = (s.capacity - s.issued) as Uint<32>;
+  shows.insert(id, Show { ...s, phase: Phase.sale, pool: (s.pool + unclaimed) as Uint<32> });
+}
+
+export circuit closeShow(showId: Bytes<32>): [] {
+  const id = disclose(showId);
+  const s = requireShow(id);
+  requireRole(s.organizer);
+  assert(s.phase != Phase.closed, "already closed");
+  shows.insert(id, Show { ...s, phase: Phase.closed });
+}
+
+// Revenue is only withdrawable once the show is closed, so the treasury can
+// always cover every refund while returns are possible.
+export circuit withdraw(showId: Bytes<32>): [] {
+  const id = disclose(showId);
+  const s = requireShow(id);
+  requireRole(s.organizer);
+  assert(s.phase == Phase.closed, "close the show first");
+  assert(s.revenue > 0, "nothing to withdraw");
+  payOut(s.revenue);
+  shows.insert(id, Show { ...s, revenue: 0 });
+}
+
+// ---------------------------------------------------------------------------
+// Fans
+// ---------------------------------------------------------------------------
+
+export circuit enterDraw(showId: Bytes<32>): [] {
+  const id = disclose(showId);
+  const s = requireShow(id);
+  assert(s.phase == Phase.draw, "draw entries are closed");
+  const fsk = fanSecret();
+  proveFan(fsk);
+  const tag = disclose(entryTag(id, fsk));
+  assert(!entryTags.member(tag), "one entry per verified fan");
+  entryTags.insert(tag);
+  entryAt.insert(entryKey(id, s.entries), tag);
+  const r = disclose(entryContribution());
+  shows.insert(id, Show {
+    ...s,
+    entries: (s.entries + 1) as Uint<32>,
+    entropy: (s.entropy + r) as Uint<64>
+  });
+}
+
+export circuit claimTicket(showId: Bytes<32>, slot: Uint<8>, coin: ShieldedCoinInfo): [] {
+  const id = disclose(showId);
+  const s = requireShow(id);
+  assert(s.phase == Phase.drawn, "not in the claim window");
+  const fsk = fanSecret();
+  const tag = disclose(entryTag(id, fsk));
+  assert(!claimed.member(tag), "seat already claimed");
+  const idx = disclose(entryIndexOf(id, tag));
+  assert(idx < s.entries, "no such entry");
+  assert(entryAt.lookup(entryKey(id, idx)) == tag, "entry does not belong to this fan");
+  assert(windowPosition(idx, s.offset, s.entries) < s.capacity, "not drawn");
+  claimed.insert(tag);
+  mintTicket(id, s, fsk, slot);
+  takePayment(coin, s.faceValue);
+  shows.insert(id, Show {
+    ...s,
+    issued: (s.issued + 1) as Uint<32>,
+    revenue: (s.revenue + s.faceValue) as Uint<128>
+  });
+}
+
+export circuit buyFromPool(showId: Bytes<32>, slot: Uint<8>, coin: ShieldedCoinInfo): [] {
+  const id = disclose(showId);
+  const s = requireShow(id);
+  assert(s.phase == Phase.sale, "pool is not open");
+  assert(s.pool > 0, "no seats in the pool");
+  const fsk = fanSecret();
+  proveFan(fsk);
+  mintTicket(id, s, fsk, slot);
+  takePayment(coin, s.faceValue);
+  shows.insert(id, Show {
+    ...s,
+    pool: (s.pool - 1) as Uint<32>,
+    issued: (s.issued + 1) as Uint<32>,
+    revenue: (s.revenue + s.faceValue) as Uint<128>
+  });
+}
+
+// The only exit for a ticket: back to the pool, refunded at exactly face value.
+export circuit returnTicket(showId: Bytes<32>, slot: Uint<8>): [] {
+  const id = disclose(showId);
+  const s = requireShow(id);
+  assert(s.phase == Phase.drawn || s.phase == Phase.sale, "returns are closed");
+  const fsk = fanSecret();
+  spendTicket(id, fsk, slot);
+  payOut(s.faceValue as Uint<128>);
+  shows.insert(id, Show {
+    ...s,
+    pool: (s.pool + 1) as Uint<32>,
+    returned: (s.returned + 1) as Uint<32>,
+    revenue: (s.revenue - s.faceValue) as Uint<128>
+  });
+}
+
+// Check in before reaching the venue: spends the ticket and registers a fresh
+// device key. At the gate the phone only signs a challenge with that key, which
+// the gate verifies offline in milliseconds.
+export circuit checkIn(showId: Bytes<32>, slot: Uint<8>, passKey: Bytes<32>): [] {
+  const id = disclose(showId);
+  const s = requireShow(id);
+  assert(s.phase == Phase.drawn || s.phase == Phase.sale, "check-in is closed");
+  const fsk = fanSecret();
+  spendTicket(id, fsk, slot);
+  const pk = disclose(passKey);
+  assert(!passes.member(pk), "gate-pass key already registered");
+  passes.insert(pk, id);
+  shows.insert(id, Show { ...s, checkedIn: (s.checkedIn + 1) as Uint<32> });
+}
+
+// ---------------------------------------------------------------------------
+// Test currency (testnet only): shielded tKRW minted to the caller.
+// ---------------------------------------------------------------------------
+
+export circuit faucet(amount: Uint<64>): ShieldedCoinInfo {
+  assert(disclose(amount <= 10000000), "faucet limit is 10,000,000 tKRW");
+  mintCounter.increment(1);
+  mintNonce = evolveNonce(mintCounter.read() as Uint<128>, mintNonce);
+  return mintShieldedToken(
+    tkrwDomain(),
+    disclose(amount),
+    mintNonce,
+    left<ZswapCoinPublicKey, ContractAddress>(ownPublicKey())
+  );
+}

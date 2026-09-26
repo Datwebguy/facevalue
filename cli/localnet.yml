@@ -1,0 +1,37 @@
+# Local Midnight network for development and CI: node (dev preset, genesis-funded),
+# standalone indexer and proof server on fixed localhost ports.
+# Same images as midnightntwrk/example-bboard.
+name: facevalue-localnet
+services:
+  node:
+    image: midnightntwrk/midnight-node:0.22.3
+    ports:
+      - "127.0.0.1:9944:9944"
+    environment:
+      CFG_PRESET: "dev"
+      SIDECHAIN_BLOCK_BENEFICIARY: "04bcf7ad3be7a5c790460be82a713af570f22e0f801f6659ab8e84a52be6969e"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9944/health"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+      start_period: 40s
+
+  indexer:
+    image: midnightntwrk/indexer-standalone:4.0.1
+    ports:
+      - "127.0.0.1:8088:8088"
+    environment:
+      RUST_LOG: "indexer=info,chain_indexer=info,indexer_api=info,wallet_indexer=info,indexer_common=info,info"
+      # Placeholder secret required by the standalone indexer's config schema. Local use only.
+      APP__INFRA__SECRET: "303132333435363738393031323334353637383930313233343536373839303132"
+      APP__INFRA__NODE__URL: "ws://node:9944"
+    depends_on:
+      node:
+        condition: service_started
+
+  proof-server:
+    image: midnightntwrk/proof-server:8.0.3
+    command: ["midnight-proof-server", "-v"]
+    ports:
+      - "127.0.0.1:6300:6300"

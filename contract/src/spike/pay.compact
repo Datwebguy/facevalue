@@ -1,0 +1,72 @@
+// Payment spike: can a contract hold shielded coins across transactions
+// and refund them later? This is the riskiest mechanic in FaceValue
+// (face-value payment in, face-value refund out), so it is proven first.
+
+pragma language_version 0.23;
+
+import CompactStandardLibrary;
+
+export ledger treasury: QualifiedShieldedCoinInfo;
+export ledger hasTreasury: Boolean;
+export ledger mintCounter: Counter;
+export ledger mintNonce: Bytes<32>;
+export ledger paidIn: Uint<128>;
+export ledger refundedOut: Uint<128>;
+
+constructor() {
+  hasTreasury = false;
+}
+
+pure circuit tkrwDomain(): Bytes<32> {
+  return pad(32, "facevalue:tKRW");
+}
+
+export circuit tkrwColor(): Bytes<32> {
+  return tokenType(tkrwDomain(), kernel.self());
+}
+
+// Test-token faucet: mints shielded tKRW to the caller.
+export circuit faucet(amount: Uint<64>): ShieldedCoinInfo {
+  mintCounter.increment(1);
+  mintNonce = evolveNonce(mintCounter.read() as Uint<128>, mintNonce);
+  return mintShieldedToken(
+    tkrwDomain(),
+    disclose(amount),
+    mintNonce,
+    left<ZswapCoinPublicKey, ContractAddress>(ownPublicKey())
+  );
+}
+
+// Pay a shielded coin into the contract treasury.
+export circuit pay(coin: ShieldedCoinInfo): [] {
+  const c = disclose(coin);
+  assert(c.color == tkrwColor(), "wrong token");
+  receiveShielded(c);
+  if (hasTreasury) {
+    treasury.writeCoin(
+      mergeCoinImmediate(treasury, c),
+      right<ZswapCoinPublicKey, ContractAddress>(kernel.self())
+    );
+  } else {
+    treasury.writeCoin(c, right<ZswapCoinPublicKey, ContractAddress>(kernel.self()));
+    hasTreasury = true;
+  }
+  paidIn = (paidIn + c.value) as Uint<128>;
+}
+
+// Refund part of the treasury to the caller.
+export circuit refund(amount: Uint<128>): [] {
+  assert(hasTreasury, "treasury empty");
+  const amt = disclose(amount);
+  const res = sendShielded(
+    treasury,
+    left<ZswapCoinPublicKey, ContractAddress>(ownPublicKey()),
+    amt
+  );
+  if (res.change.is_some) {
+    treasury.writeCoin(res.change.value, right<ZswapCoinPublicKey, ContractAddress>(kernel.self()));
+  } else {
+    hasTreasury = false;
+  }
+  refundedOut = (refundedOut + amt) as Uint<128>;
+}

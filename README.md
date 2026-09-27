@@ -1,6 +1,6 @@
 # FaceValue · 정가
 
-**English** · [한국어](README.ko.md) · **Live site: https://facevalue-mu.vercel.app**
+**English** · [한국어](README.ko.md) · **Live site: https://tryfacevalue.xyz**
 
 **Anti-scalping tickets on Midnight. Every fan is verified. Nobody learns who they are.**
 

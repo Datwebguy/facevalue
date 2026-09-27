@@ -3,7 +3,8 @@ import { createRoot } from 'react-dom/client';
 import QRCode from 'qrcode';
 import jsQR from 'jsqr';
 import { passKeysFor, readLedger, showsOf, type NetworkName, type ShowView } from './chain';
-import { createPassKey, signPass, verifyPass, WINDOW_MS, type GateVerdict } from './gatepass';
+import { createPassKey, signPass, toHex, verifyPass, WINDOW_MS, type GateVerdict } from './gatepass';
+import { getPass, putPass, type StoredPass } from './passstore';
 import { DEPLOYMENT } from './deployment';
 import { FanPage } from './FanPage';
 import { SetupPage } from './SetupPage';
@@ -106,6 +107,7 @@ function Nav() {
       <nav className="links">
         {link('#/', t.navHow)}
         {link('#/fan', t.navFans)}
+        {link('#/pass', t.navPass)}
         {link('#/gate', t.navStaff)}
         {link('#/setup', t.navOrg)}
       </nav>
@@ -360,17 +362,27 @@ function ShowBoard({ s, enrolled }: { s: ShowView; enrolled?: string }) {
 // Fan: rotating entry pass
 
 function Pass() {
-  const { t } = useI18n();
-  const [key, setKey] = useState<Awaited<ReturnType<typeof createPassKey>> | null>(null);
+  const { t, lang } = useI18n();
+  const L = (en: string, ko: string) => (lang === 'ko' ? ko : en);
   const show = DEPLOYMENT.showId;
+  const [key, setKey] = useState<StoredPass | null>(null);
   const [qr, setQr] = useState('');
+  const [pairQr, setPairQr] = useState('');
   const [left, setLeft] = useState(0);
+  const [copied, setCopied] = useState(false);
+  const { ledger } = useLedger(DEPLOYMENT.network, DEPLOYMENT.contract);
+  const code = key ? toHex(key.passKey) : '';
+  const active = !!(ledger && code && passKeysFor(ledger, show).has(code));
+
+  useEffect(() => {
+    getPass('device').then((p) => p && setKey(p));
+  }, []);
+  useEffect(() => {
+    if (code) QRCode.toDataURL(code, { margin: 1, width: 260 }).then(setPairQr);
+  }, [code]);
   useEffect(() => {
     if (!key) return;
-    const draw = async () => {
-      const text = await signPass(key.keyPair.privateKey, key.rawPublicKey, show);
-      setQr(await QRCode.toDataURL(text, { margin: 1, width: 320 }));
-    };
+    const draw = async () => setQr(await QRCode.toDataURL(await signPass(key.keyPair.privateKey, key.rawPublicKey, show), { margin: 1, width: 320 }));
     draw();
     const timer = setInterval(() => {
       const ms = WINDOW_MS - (Date.now() % WINDOW_MS);
@@ -379,6 +391,13 @@ function Pass() {
     }, 1000);
     return () => clearInterval(timer);
   }, [key, show]);
+
+  const create = async () => {
+    const k = await createPassKey();
+    await putPass('device', k);
+    setKey(k);
+  };
+
   return (
     <main className="page">
       <Reveal>
@@ -386,16 +405,24 @@ function Pass() {
         <p className="lede">{t.passBody}</p>
       </Reveal>
       {!key ? (
-        <button className="btn" onClick={async () => setKey(await createPassKey())}>
-          {t.createKey}
-        </button>
-      ) : (
+        <button className="btn" onClick={create}>{t.createKey}</button>
+      ) : active ? (
         <Reveal className="pass-card">
-          <p className="muted">{t.passKeyLabel}</p>
+          <p className="pill ok-pill">✓ {L('Checked in. Show this at the door.', '체크인 완료. 입구에서 보여주세요.')}</p>
           {qr && <img className="qr" src={qr} alt="" />}
           <div className="countdown" style={{ ['--p' as string]: `${(left / 30) * 100}%` }}>
             <span>{t.resigns(left)}</span>
           </div>
+        </Reveal>
+      ) : (
+        <Reveal className="pass-card">
+          <h3>{L('Pair this phone', '이 휴대폰 연결')}</h3>
+          <p className="muted">{L('At check in on your computer, paste this phone code. This screen then turns into your entry pass.', '컴퓨터에서 체크인할 때 이 휴대폰 코드를 붙여 넣으세요. 그러면 이 화면이 입장 패스로 바뀝니다.')}</p>
+          {pairQr && <img className="qr" src={pairQr} alt="" />}
+          <code className="pair-code">{code}</code>
+          <button className="btn ghost" onClick={() => navigator.clipboard?.writeText(code).then(() => setCopied(true))}>
+            {copied ? L('Copied', '복사됨') : L('Copy phone code', '휴대폰 코드 복사')}
+          </button>
         </Reveal>
       )}
     </main>

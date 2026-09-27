@@ -10,6 +10,7 @@ import { DEPLOYMENT, saveDeployment } from './deployment';
 import { connectLace, type FanContract } from './lace';
 import { toHex } from './gatepass';
 import { useI18n } from './i18n';
+import { noWalletDevice } from './passstore';
 
 const fromHex = (h: string) => Uint8Array.from(h.match(/.{2}/g) ?? [], (b) => parseInt(b, 16));
 const pad32 = (s: string) => {
@@ -166,6 +167,9 @@ export function SetupPage() {
     <main className="page">
       <h1 className="page-title">{L('Open the box office', '매표소 열기')}</h1>
       <p className="lede">{L('For organizers. Each step asks Lace to approve.', '주최자용. 단계마다 Lace 승인이 필요합니다.')}</p>
+      {noWalletDevice() && (
+        <p className="pill">{L('Open this page on a computer with the Lace wallet.', 'Lace 지갑이 있는 컴퓨터에서 이 페이지를 여세요.')}</p>
+      )}
 
       {steps.map(([label, done, f], i) => (
         <section className="fan-step" key={i}>

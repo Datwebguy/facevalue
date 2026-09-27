@@ -18,26 +18,7 @@ const pad32 = (s: string) => {
   return o;
 };
 
-// Non-extractable pass keys persist in IndexedDB (CryptoKey objects are structured-cloneable).
-const idb = () =>
-  new Promise<IDBDatabase>((res, rej) => {
-    const r = indexedDB.open('facevalue', 1);
-    r.onupgradeneeded = () => r.result.createObjectStore('passes');
-    r.onsuccess = () => res(r.result);
-    r.onerror = () => rej(r.error);
-  });
-const putPass = async (show: string, v: unknown) => {
-  const db = await idb();
-  db.transaction('passes', 'readwrite').objectStore('passes').put(v, show);
-};
-const getPass = async (show: string) => {
-  const db = await idb();
-  return new Promise<{ keyPair: CryptoKeyPair; rawPublicKey: Uint8Array } | undefined>((res) => {
-    const q = db.transaction('passes').objectStore('passes').get(show);
-    q.onsuccess = () => res(q.result);
-    q.onerror = () => res(undefined);
-  });
-};
+import { getPass, noWalletDevice, putPass } from './passstore';
 
 export function FanPage() {
   const { lang } = useI18n();
@@ -48,6 +29,8 @@ export function FanPage() {
   const [log, setLog] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [qr, setQr] = useState('');
+  const [phoneCode, setPhoneCode] = useState('');
+  const mobile = noWalletDevice();
   const show = DEPLOYMENT.showId;
   const say = (m: string) => setLog((l) => [`${new Date().toLocaleTimeString()} ${m}`, ...l]);
 
@@ -128,9 +111,11 @@ export function FanPage() {
 
   const checkIn = () =>
     run(ko ? '체크인' : 'Check in', async () => {
-      const k = await createPassKey();
-      const r = await fv!.callTx.checkIn(fromHexB(show), BigInt(heldSlot()!), k.passKey);
-      await putPass(show, { keyPair: k.keyPair, rawPublicKey: k.rawPublicKey });
+      const code = phoneCode.trim().toLowerCase();
+      if (code && !/^[0-9a-f]{64}$/.test(code)) throw new Error(ko ? '휴대폰 연결 코드가 올바르지 않습니다' : 'That phone code is not valid');
+      const k = code ? null : await createPassKey();
+      const r = await fv!.callTx.checkIn(fromHexB(show), BigInt(heldSlot()!), code ? fromHexB(code) : k!.passKey);
+      if (k) await putPass(show, k);
       setHeld(undefined);
       return r;
     });
@@ -151,6 +136,16 @@ export function FanPage() {
     <main className="page">
       <h1 className="page-title">{L('Get your ticket', '티켓 받기')}</h1>
       <p className="lede">{L('Four taps. Face value. Nobody sees who.', '네 번의 탭. 정가 그대로. 누구인지는 비공개.')}</p>
+      {mobile && (
+        <section className="fan-step handoff">
+          <h3>{L('Buying works on a computer', '구매는 컴퓨터에서')}</h3>
+          <p className="muted">{L('Midnight wallets run on desktop browsers for now. Use this phone as your entry pass.', 'Midnight 지갑은 아직 데스크톱 브라우저에서만 작동합니다. 이 휴대폰은 입장 패스로 쓰세요.')}</p>
+          <div className="fan-actions">
+            <a className="btn" href="#/pass">{L('Set up my phone pass', '휴대폰 패스 설정')}</a>
+            <button className="btn ghost" onClick={() => navigator.clipboard?.writeText(location.href.split('#')[0] + '#/fan')}>{L('Copy link for computer', '컴퓨터용 링크 복사')}</button>
+          </div>
+        </section>
+      )}
       {!DEPLOYMENT.contract && <p className="pill">{L('The box office opens soon.', '매표소가 곧 열립니다.')}</p>}
 
       <section className="fan-step">
@@ -186,6 +181,7 @@ export function FanPage() {
             <button className="btn" disabled={busy} onClick={() => claim(false)}>{L('Buy my seat', '당첨 좌석 구매')}</button>
             <button className="btn ghost" disabled={busy} onClick={() => claim(true)}>{L('Buy a returned seat', '반납 좌석 구매')}</button>
             <button className="btn ghost" disabled={busy || heldSlot() === undefined} onClick={giveBack}>{L('Return for refund', '반납하고 환불')}</button>
+            <input className="mono phone-code" placeholder={L('Phone code (optional)', '휴대폰 코드 (선택)')} value={phoneCode} onChange={(e) => setPhoneCode(e.target.value)} />
             <button className="btn" disabled={busy || heldSlot() === undefined} onClick={checkIn}>{L('Check in', '체크인')}</button>
           </div>
         </section>

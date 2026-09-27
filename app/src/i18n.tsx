@@ -5,6 +5,7 @@ export type Lang = 'ko' | 'en';
 const en = {
   navHow: 'How it works',
   navFans: 'For fans',
+  navPass: 'My pass',
   navStaff: 'For venue staff',
   navOrg: 'For organizers',
   heroKicker: 'Concert tickets, finally fair',
@@ -87,6 +88,7 @@ type Dict = typeof en;
 const ko: Dict = {
   navHow: '이용 방법',
   navFans: '팬',
+  navPass: '내 패스',
   navStaff: '공연장 직원',
   navOrg: '주최자',
   heroKicker: '드디어 공정한 공연 티켓',

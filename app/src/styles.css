@@ -229,3 +229,37 @@ footer { text-align: center; color: var(--muted); font-size: 14px; padding: 60px
 
 :root[lang='ko'] .kicker { font-family: 'Pretendard Variable', sans-serif; letter-spacing: 0.02em; font-weight: 700; }
 :root[lang='ko'] .stamp, :root[lang='ko'] .ticket-stub small, :root[lang='ko'] .ticket-row small { font-family: 'Pretendard Variable', sans-serif; letter-spacing: 0; }
+
+/* Phone pairing and mobile */
+.pair-code { display: block; font-size: 12px; margin: 8px auto 16px; max-width: 34ch; line-height: 1.5; color: var(--muted); }
+.ok-pill { background: color-mix(in srgb, var(--ok) 20%, transparent); color: var(--ok); font-weight: 700; }
+.handoff { border-color: color-mix(in srgb, var(--accent) 45%, transparent); background: color-mix(in srgb, var(--accent) 8%, transparent); }
+.phone-code { width: 100%; flex-basis: 100%; }
+textarea, input { font-size: 16px; } /* stops iOS zooming into fields */
+img, video, code { max-width: 100%; }
+.controls .seg button { min-height: 36px; }
+
+@media (max-width: 600px) {
+  body { font-size: 16px; }
+  .nav { padding: 10px 14px; gap: 10px; }
+  .brand { font-size: 18px; }
+  .links { margin: 0 -14px; padding: 0 14px 4px; gap: 4px; scrollbar-width: none; }
+  .links::-webkit-scrollbar { display: none; }
+  .links a { white-space: nowrap; padding: 8px 12px; font-size: 14px; }
+  .hero { padding: 28px 16px 36px; gap: 8px; }
+  .hero h1 { font-size: clamp(38px, 11vw, 52px); }
+  .glow { width: 280px !important; height: 280px !important; }
+  .ticket-stage { padding: 8px 0 0; }
+  .ticket { min-width: 0; width: 100%; }
+  .ticket-title { font-size: 32px; }
+  .ticket-stub { width: 96px; padding: 18px 10px; }
+  .ticket-row { gap: 16px; }
+  .ticket-row b { font-size: 16px; }
+  .actions .btn, .fan-actions .btn { flex: 1 1 100%; justify-content: center; }
+  .band { padding: 56px 16px 0; }
+  .stats { grid-template-columns: 1fr 1fr; }
+  .stats dd { font-size: 24px; }
+  .board, .side, .pass-card, .fan-step { border-radius: 20px; padding: 18px; }
+  .page { padding: 28px 16px 32px; }
+  .marquee-track { font-size: 20px; gap: 24px; }
+}

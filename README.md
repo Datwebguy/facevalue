@@ -1,6 +1,6 @@
 # FaceValue · 정가
 
-**English** · [한국어](README.ko.md)
+**English** · [한국어](README.ko.md) · **Live site: https://facevalue-mu.vercel.app**
 
 **Anti-scalping tickets on Midnight. Every fan is verified. Nobody learns who they are.**
 
@@ -26,7 +26,7 @@ FaceValue does the verification **without collecting anything**:
 | Piece | Status |
 |---|---|
 | Compact contract (`contract/src/facevalue.compact`, 10 circuits) | **Live.** Compiled with real proving keys. |
-| Full lifecycle with real ZK proofs on a Midnight network | **Live on a local Midnight network**, 18 transactions (`docs/evidence/local-run.json`). Preprod run in progress. |
+| Full lifecycle with real ZK proofs on a Midnight network | **Live on a Local Devnet** (Midnight node, indexer, proof server), 18 transactions (`docs/evidence/local-run.json`). Reproduce with `npm run localnet && npm run e2e -- local`. A Preprod run is scripted (`.github/workflows/preprod.yml`) but the faucet payout did not reach the wallet within the job's time limit. |
 | Shielded payment into the contract and refund out of it | **Live.** Proven on-chain (`cli/src/spike-pay.ts`). |
 | Attack scripts (resale clawback, bots, double entry, rigged draw, above-face payment, double admission) | **Live.** `npm run attack` runs the compiled circuits. |
 | Show dashboard reading public contract state | **Live.** Reads straight from the Midnight indexer. |

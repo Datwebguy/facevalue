@@ -6,6 +6,7 @@ import { passKeysFor, readLedger, showsOf, type NetworkName, type ShowView } fro
 import { createPassKey, signPass, verifyPass, WINDOW_MS, type GateVerdict } from './gatepass';
 import { DEPLOYMENT } from './deployment';
 import { FanPage } from './FanPage';
+import { SetupPage } from './SetupPage';
 import evidence from '../../docs/evidence/local-run.json';
 import { I18nProvider, LangToggle, ThemeToggle, useI18n } from './i18n';
 import './styles.css';
@@ -106,6 +107,7 @@ function Nav() {
         {link('#/', t.navHow)}
         {link('#/fan', t.navFans)}
         {link('#/gate', t.navStaff)}
+        {link('#/setup', t.navOrg)}
       </nav>
       <div className="controls">
         <LangToggle />
@@ -484,7 +486,7 @@ function App() {
   return (
     <>
       <Nav />
-      {route === '/fan' ? <FanPage /> : route === '/pass' ? <Pass /> : route === '/gate' ? <Gate /> : <Home />}
+      {route === '/setup' ? <SetupPage /> : route === '/fan' ? <FanPage /> : route === '/pass' ? <Pass /> : route === '/gate' ? <Gate /> : <Home />}
       <footer>{t.footer}</footer>
     </>
   );

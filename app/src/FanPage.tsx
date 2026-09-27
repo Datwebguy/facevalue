@@ -151,6 +151,7 @@ export function FanPage() {
     <main className="page">
       <h1 className="page-title">{L('Get your ticket', '티켓 받기')}</h1>
       <p className="lede">{L('Four taps. Face value. Nobody sees who.', '네 번의 탭. 정가 그대로. 누구인지는 비공개.')}</p>
+      {!DEPLOYMENT.contract && <p className="pill">{L('The box office opens soon.', '매표소가 곧 열립니다.')}</p>}
 
       <section className="fan-step">
         <h3><span className="dot">1</span>{L('Your fan ID', '내 팬 ID')}</h3>
@@ -170,7 +171,7 @@ export function FanPage() {
       <section className="fan-step">
         <h3><span className="dot">2</span>{L('Wallet', '지갑')}</h3>
         {!lace ? (
-          <button className="btn" disabled={busy || !cred} onClick={connect}>{L('Connect Lace', 'Lace 연결')}</button>
+          <button className="btn" disabled={busy || !cred || !DEPLOYMENT.contract} onClick={connect}>{L('Connect Lace', 'Lace 연결')}</button>
         ) : (
           <p className="muted">✓ {L('Connected', '연결됨')}</p>
         )}

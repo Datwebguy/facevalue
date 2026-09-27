@@ -99,9 +99,7 @@ function Nav() {
   return (
     <header className={`nav ${scrolled ? 'scrolled' : ''}`}>
       <a href="#/" className="brand">
-        <span className="brand-mark" aria-hidden>
-          <i />
-        </span>
+        <img className="brand-mark" src="logo-mark.svg" alt="" width="34" height="34" />
         FaceValue <span className="kr">정가</span>
       </a>
       <nav className="links">

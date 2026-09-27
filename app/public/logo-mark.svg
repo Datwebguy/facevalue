@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="FaceValue">
+  <title>FaceValue</title>
+  <defs>
+    <linearGradient id="fv-g" x1="6" y1="10" x2="58" y2="54" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ff4d8d"/>
+      <stop offset="0.55" stop-color="#9a57f0"/>
+      <stop offset="1" stop-color="#6c5cff"/>
+    </linearGradient>
+    <!-- ticket silhouette: rounded body with semicircle notches at the tear line -->
+    <mask id="fv-cut">
+      <rect width="64" height="64" fill="#fff"/>
+      <circle cx="44" cy="10" r="5.5" fill="#000"/>
+      <circle cx="44" cy="54" r="5.5" fill="#000"/>
+    </mask>
+  </defs>
+  <rect x="4" y="10" width="56" height="44" rx="10" fill="url(#fv-g)" mask="url(#fv-cut)"/>
+  <!-- perforation -->
+  <line x1="44" y1="19" x2="44" y2="45" stroke="#fff" stroke-opacity="0.75" stroke-width="2.4" stroke-linecap="round" stroke-dasharray="0.1 5.2"/>
+  <!-- "=" : face value, and two closed eyes -->
+  <rect x="13" y="24.5" width="21" height="5" rx="2.5" fill="#fff"/>
+  <rect x="13" y="34.5" width="21" height="5" rx="2.5" fill="#fff"/>
+  <!-- stub dot -->
+  <circle cx="52.5" cy="32" r="2.6" fill="#fff" fill-opacity="0.9"/>
+</svg>

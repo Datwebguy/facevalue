@@ -64,8 +64,8 @@ p { margin: 0 0 14px; }
 .nav.scrolled { background: color-mix(in srgb, var(--bg) 80%, transparent); backdrop-filter: blur(14px); border-color: var(--line); }
 .brand { display: flex; align-items: center; gap: 10px; font: 800 20px/1 var(--display); text-decoration: none; margin-right: auto; }
 .brand .kr { color: var(--accent); }
-.brand-mark { width: 30px; height: 20px; border-radius: 5px; background: linear-gradient(135deg, var(--accent), var(--accent2)); position: relative; overflow: hidden; }
-.brand-mark i { position: absolute; right: 7px; top: -3px; bottom: -3px; border-left: 2px dashed var(--bg); }
+.brand-mark { width: 34px; height: 34px; transform: rotate(-8deg); transition: transform 0.4s cubic-bezier(0.3, 1.6, 0.4, 1); }
+.brand:hover .brand-mark { transform: rotate(0deg) scale(1.08); }
 .links { display: flex; gap: 6px; }
 .links a { text-decoration: none; color: var(--muted); font-weight: 600; font-size: 15px; padding: 8px 14px; border-radius: 999px; transition: color 0.2s, background 0.2s; }
 .links a:hover, .links a.active { color: var(--ink); background: var(--surface-strong); }

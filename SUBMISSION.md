@@ -22,9 +22,9 @@ Korea's anti-scalping law (in force 28 August 2026) requires ticket platforms to
 
 FaceValue verifies fans without collecting anything:
 1. **Verify once.** An issuer confirms a fan is a unique person and adds only a hashed commitment to a Merkle registry on Midnight.
-2. **Fair draw instead of a speed race.** Each verified fan can enter a show's draw once, so bots and extra accounts are useless. The organizer seals its seed before entries open. The winners are a fair window of entries, chosen from that seed, every entrant's random contribution and a public drand beacon. If the organizer never reveals its seed, anyone can run the draw after the deadline.
+2. **Fair draw instead of a speed race.** Each verified fan can enter a show's draw once, so bots and extra accounts are useless. The organizer seals its seed before entries open. The winners are a window of entries chosen from that seed, every entrant's random contribution and a drand beacon value the organizer posts at reveal (checked against drand off-chain; the contract does not verify it yet). If the organizer never reveals its seed, anyone can run the draw after the deadline, and the show is publicly marked as defaulted.
 3. **Face value only.** Winners pay exactly face value in shielded tKRW. A per-fan cap is enforced with nullifiers.
-4. **No transfer function at all.** The only way out of a ticket is a face-value refund back to the pool, and the next verified fan buys that seat at face value. A scalper can never deliver a seat to a buyer: whoever holds the secrets can always claw the ticket back, so the black market cannot work.
+4. **No transfer function at all.** The only way out of a ticket is a face-value refund back to the pool, and the next verified fan buys that seat at face value. No sale above face value can pass through the contract. A seller who hands over the secrets can claw the ticket back until the buyer checks in; a buyer who checks in first keeps it, so opening check-in only near show time is the next contract change.
 5. **Walk straight in.** The fan checks in from home, which spends the ticket and registers a one-time device key. At the door the phone shows a QR code re-signed every 30 seconds, and the gate verifies it offline in milliseconds. No ID, no face scan.
 
 Core flow: Organizer opens the box office and announces a show → fan creates a private fan ID → issuer verifies the fan → fan enters the draw → winners buy at face value → a fan who can't go returns the ticket for a refund → another fan buys it at face value → fans check in → staff scan at the door.
@@ -38,11 +38,11 @@ Core flow: Organizer opens the box office and announces a show → fan creates a
 - ownership of an unspent ticket, via a Merkle path and nullifier
 - an exact face-value payment
 
-**What is disclosed:** counts (seats, entries, tickets issued, returned and checked in), the draw seed after reveal, nullifiers and commitments, and the price. Anyone can audit that the draw was fair and that nobody paid above face value.
+**What is disclosed:** counts (seats, entries, tickets issued, returned and checked in), the draw seed after reveal, nullifiers and commitments, and the price. Anyone can audit that the sealed seed was honored and that nobody paid above face value.
 
-**What stays private:** who entered, who won, who holds which ticket, who returned one, and the fan's identity.
+**What stays private:** the identity behind every entry, win, ticket, return and check-in. Entries and claims are visible as anonymous tags and commitments.
 
-**Shielded tokens:** payments go into a contract-held treasury (`receiveShielded`, `mergeCoinImmediate`), and refunds go out with `sendShielded`. This was proven on-chain with real proofs.
+**Shielded tokens:** payments go into a contract-held treasury (`receiveShielded`, `mergeCoinImmediate`), and refunds go out with `sendShielded`. This ran with real proofs on a Local Midnight devnet.
 
 **Why privacy is needed:** the law demands identity-bound tickets. Without zero knowledge, identity-bound means a database of who went to which concert. Midnight lets the platform prove compliance publicly while knowing nothing about any individual fan.
 
@@ -59,14 +59,14 @@ https://tryfacevalue.xyz
 ```bash
 git clone https://github.com/Datwebguy/facevalue && cd facevalue
 npm install
-npm test          # 23 tests
-npm run attack    # scalping attacks blocked by the compiled circuits
+npm test          # 27 tests
+npm run attack    # scalping attempts blocked by the compiled circuits
 npm run localnet  # local Midnight node + indexer + proof server (Docker)
 npm run e2e -- local   # full lifecycle with real proofs, 18 transactions
 ```
 The compiled contract is committed. To recompile: `npm run compact` (Compact 0.31.1).
 
-Live on Preprod: open https://tryfacevalue.xyz with Lace on Preprod, with the proof server set to local (`docker run -p 6300:6300 midnightntwrk/proof-server:8.0.3 midnight-proof-server`).
+On https://tryfacevalue.xyz, **Try it now** runs the compiled contract in the browser with no wallet. The organizer, fan and gate pages work with Lace on Preprod and a local proof server (`docker run -p 6300:6300 midnightntwrk/proof-server:8.0.3 midnight-proof-server`); a public Preprod deployment is not published yet, so an organizer first opens a box office from the organizer page.
 
 ## Midnight Academy certificates
 **[you]** Upload the Stage 1 (Explorer) and Stage 2 (Scholar) certificates. They add +1 point each.

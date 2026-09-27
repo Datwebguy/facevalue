@@ -1,3 +1,5 @@
+// Builds docs/FaceValue-deck.pptx. Needs pptxgenjs, which is not a project dependency:
+//   npm i --no-save pptxgenjs && node docs/deck-build.cjs
 const pptxgen = require('pptxgenjs');
 const path = require('path');
 

@@ -41,12 +41,13 @@ const blocked = (label: string, fn: () => unknown) => {
 
 const attacks: Record<string, { title: string; run: () => boolean }> = {
   resell: {
-    title: 'Scalper sells a ticket off-chain, then claws it back',
+    title: 'Scalper sells a ticket off-chain, then claws it back before the buyer checks in',
     run: () => {
       const w = world(3);
       const [scalper] = w.draw(w.fans);
       w.sim.as(scalper, (c, ctx) => c.claimTicket(ctx, w.showId, 0n, w.sim.coin(FACE)));
       // The only way to "deliver" a FaceValue ticket off-chain is to hand over the secrets.
+      // If the buyer checks in first, the seller can no longer claw it back: see limits.test.ts.
       const buyer: Actor = { ...makeActor('black-market buyer'), state: scalper.state };
       console.log('   scalper sells secrets for ₩10,370,000 to a buyer, then returns the ticket for a ₩110,000 refund');
       w.sim.as(scalper, (c, ctx) => c.returnTicket(ctx, w.showId, 0n));

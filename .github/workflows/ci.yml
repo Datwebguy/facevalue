@@ -19,3 +19,8 @@ jobs:
         run: node scripts/compact.mjs --skip-zk
       - run: npm test
       - run: npm run attack
+      # The web app is deployed from this code, so it must type-check and bundle.
+      # (Proving keys are not built here; the app fetches them at runtime.)
+      - name: Type-check and build the web app
+        working-directory: app
+        run: npx tsc --noEmit -p . && npx vite build

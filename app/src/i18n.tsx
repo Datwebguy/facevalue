@@ -4,6 +4,8 @@ export type Lang = 'ko' | 'en';
 
 const en = {
   navHow: 'How it works',
+  navTry: 'Try it now',
+  ctaTry: 'Try it now',
   navFans: 'For fans',
   navPass: 'My pass',
   navStaff: 'For venue staff',
@@ -87,6 +89,8 @@ type Dict = typeof en;
 
 const ko: Dict = {
   navHow: '이용 방법',
+  navTry: '지금 체험',
+  ctaTry: '지금 체험하기',
   navFans: '팬',
   navPass: '내 패스',
   navStaff: '공연장 직원',

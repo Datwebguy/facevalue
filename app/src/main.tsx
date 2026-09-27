@@ -8,6 +8,7 @@ import { getPass, putPass, type StoredPass } from './passstore';
 import { DEPLOYMENT } from './deployment';
 import { FanPage } from './FanPage';
 import { SetupPage } from './SetupPage';
+import { TryPage } from './TryPage';
 import evidence from '../../docs/evidence/local-run.json';
 import { I18nProvider, LangToggle, ThemeToggle, useI18n } from './i18n';
 import './styles.css';
@@ -106,6 +107,7 @@ function Nav() {
       </a>
       <nav className="links">
         {link('#/', t.navHow)}
+        {link('#/try', t.navTry)}
         {link('#/fan', t.navFans)}
         {link('#/pass', t.navPass)}
         {link('#/gate', t.navStaff)}
@@ -194,8 +196,11 @@ function Home() {
           </h1>
           <p className="lede">{t.heroBody}</p>
           <div className="actions">
-            <a className="btn" href="#/fan">
-              {t.ctaFan} <span aria-hidden>→</span>
+            <a className="btn" href="#/try">
+              {t.ctaTry} <span aria-hidden>→</span>
+            </a>
+            <a className="btn ghost" href="#/fan">
+              {t.ctaFan}
             </a>
             <a className="btn ghost" href="#/gate">
               {t.ctaStaff}
@@ -513,7 +518,7 @@ function App() {
   return (
     <>
       <Nav />
-      {route === '/setup' ? <SetupPage /> : route === '/fan' ? <FanPage /> : route === '/pass' ? <Pass /> : route === '/gate' ? <Gate /> : <Home />}
+      {route === '/try' ? <TryPage /> : route === '/setup' ? <SetupPage /> : route === '/fan' ? <FanPage /> : route === '/pass' ? <Pass /> : route === '/gate' ? <Gate /> : <Home />}
       <footer>{t.footer}</footer>
     </>
   );

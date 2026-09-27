@@ -263,3 +263,29 @@ img, video, code { max-width: 100%; }
   .page { padding: 28px 16px 32px; }
   .marquee-track { font-size: 20px; gap: 24px; }
 }
+
+/* Try it now */
+.progress { list-style: none; padding: 0; margin: 22px 0; display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
+.progress li { flex: 1 0 auto; display: grid; justify-items: center; gap: 6px; font-size: 12px; color: var(--muted); min-width: 64px; }
+.progress li span { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; border: 2px solid var(--line); font-weight: 800; }
+.progress li.now span { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 16px -2px var(--accent); }
+.progress li.done span { background: var(--ok); border-color: var(--ok); color: #03170e; }
+.progress em { font-style: normal; text-align: center; }
+.now-card { animation: rise 0.5s ease both; }
+.chainview { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 18px 0; }
+.chainview div { background: var(--surface-strong); border-radius: 14px; padding: 10px; text-align: center; }
+.chainview b { display: block; font: 800 24px/1 var(--display); }
+.chainview small { color: var(--muted); font-size: 12px; }
+.rulelog { list-style: none; padding: 0; margin: 0 0 16px; display: grid; gap: 8px; }
+.rulelog li { padding: 10px 14px; border-radius: 12px; font-size: 15px; animation: rise 0.4s ease both; }
+.rulelog li.ok { background: color-mix(in srgb, var(--ok) 14%, transparent); }
+.rulelog li.no { background: color-mix(in srgb, var(--no) 16%, transparent); }
+
+/* Navigation never wraps its labels; below 1000px it becomes a scrolling row */
+.brand, .links a { white-space: nowrap; }
+@media (max-width: 1000px) {
+  .nav { flex-wrap: wrap; }
+  .links { order: 3; width: 100%; overflow-x: auto; scrollbar-width: none; }
+  .links::-webkit-scrollbar { display: none; }
+}
+.progress em { max-width: 76px; line-height: 1.2; }

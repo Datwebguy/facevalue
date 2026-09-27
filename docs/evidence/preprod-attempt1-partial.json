@@ -1,0 +1,13 @@
+{
+  "network": "preprod",
+  "tkrwContract": "d6651a67c8ec5bb02aa3ba350450a64254f58abd7887953eaaef78282893933d",
+  "steps": [
+    {
+      "step": "deploy tKRW stablecoin",
+      "actor": "issuer",
+      "txHash": "ecb5ab47d3e052baa313351f3f37a46e42caa07e7e2eeb9e74a5087a44d5b099",
+      "ms": 23524
+    }
+  ],
+  "updatedAt": "2026-09-27T23:39:08.986Z"
+}

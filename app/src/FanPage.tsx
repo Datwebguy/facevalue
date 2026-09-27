@@ -165,8 +165,15 @@ export function FanPage() {
 
       <section className="fan-step">
         <h3><span className="dot">2</span>{L('Wallet', '지갑')}</h3>
-        {!lace ? (
-          <button className="btn" disabled={busy || !cred || !DEPLOYMENT.contract} onClick={connect}>{L('Connect Lace', 'Lace 연결')}</button>
+        {mobile ? (
+          <>
+            <p className="muted">{L('Use your computer for this step. Lace runs on desktop browsers.', '이 단계는 컴퓨터에서 하세요. Lace는 데스크톱 브라우저에서 작동합니다.')}</p>
+            <button className="btn ghost" onClick={() => navigator.clipboard?.writeText(location.href.split('#')[0] + '#/fan')}>{L('Copy link for computer', '컴퓨터용 링크 복사')}</button>
+          </>
+        ) : !DEPLOYMENT.contract ? (
+          <p className="muted">{L('Opens when the organizer opens the box office.', '주최자가 매표소를 열면 사용할 수 있습니다.')}</p>
+        ) : !lace ? (
+          <button className="btn" disabled={busy || !cred} onClick={connect}>{L('Connect Lace', 'Lace 연결')}</button>
         ) : (
           <p className="muted">✓ {L('Connected', '연결됨')}</p>
         )}

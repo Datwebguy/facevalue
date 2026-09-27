@@ -34,7 +34,17 @@ export const zkConfigPath = path.resolve(here, '..', '..', 'contract', 'src', 'm
 /** Genesis-funded seed of the local dev node (standalone networks only). */
 export const GENESIS_SEED = '0000000000000000000000000000000000000000000000000000000000000001';
 
-export const environments: Record<'local' | 'preprod', EnvironmentConfiguration> = {
+export const environments: Record<'local' | 'preprod' | 'preview', EnvironmentConfiguration> = {
+  preview: {
+    walletNetworkId: 'preview',
+    networkId: 'preview',
+    indexer: 'https://indexer.preview.midnight.network/api/v4/graphql',
+    indexerWS: 'wss://indexer.preview.midnight.network/api/v4/graphql/ws',
+    node: 'https://rpc.preview.midnight.network',
+    nodeWS: 'wss://rpc.preview.midnight.network',
+    faucet: 'https://midnight-tmnight-preview.nethermind.dev/',
+    proofServer: process.env.PROOF_SERVER ?? 'http://127.0.0.1:6300',
+  } as EnvironmentConfiguration,
   local: {
     walletNetworkId: 'undeployed',
     networkId: 'undeployed',

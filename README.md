@@ -48,7 +48,7 @@ FaceValue does the verification **without collecting anything**:
 
 ```bash
 npm install
-npm test                 # 22 tests: contract simulator + gate-pass crypto
+npm test                 # 23 tests: contract simulator + gate-pass crypto
 npm run attack           # adversarial scripts against the compiled circuits
 npm run localnet         # local Midnight node, indexer, proof server (Docker)
 npm run e2e -- local     # full lifecycle with real proofs, writes docs/evidence/local-run.json

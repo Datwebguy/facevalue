@@ -59,7 +59,7 @@ https://tryfacevalue.xyz
 ```bash
 git clone https://github.com/Datwebguy/facevalue && cd facevalue
 npm install
-npm test          # 22 tests
+npm test          # 23 tests
 npm run attack    # scalping attacks blocked by the compiled circuits
 npm run localnet  # local Midnight node + indexer + proof server (Docker)
 npm run e2e -- local   # full lifecycle with real proofs, 18 transactions

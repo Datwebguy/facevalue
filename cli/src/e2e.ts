@@ -41,6 +41,15 @@ const pad32 = (s: string) => {
 type Step = { step: string; actor: string; txHash?: string; blockHeight?: number; ms: number; note?: string };
 const steps: Step[] = [];
 
+// Written after every transaction, so a run that stops halfway still records what reached the chain.
+const evidenceDir = path.resolve('docs', 'evidence');
+const progress: Record<string, unknown> = { network: net };
+const record = (s: Step) => {
+  steps.push(s);
+  mkdirSync(evidenceDir, { recursive: true });
+  writeFileSync(path.join(evidenceDir, `${net}-partial.json`), JSON.stringify({ ...progress, steps, updatedAt: new Date().toISOString() }, null, 2));
+};
+
 const FACE = 110_000n;
 const CAPACITY = 2n;
 const PER_FAN_CAP = 2n;
@@ -51,10 +60,11 @@ const BEACON = 123_456_789n;
 
 async function main() {
   logger.info(`FaceValue e2e on ${net} — proof server ${env.proofServer}, zk assets ${zkConfigPath}`);
-  const wallet = await SeedWallet.build(env, process.env.FV_SEED ?? (net === 'local' ? GENESIS_SEED : readProjectSeed()));
+  const seed = process.env.FV_SEED ?? (net === 'local' ? GENESIS_SEED : readProjectSeed());
+  const wallet = await SeedWallet.build(env, seed);
   await wallet.start();
   logger.info('syncing wallet…');
-  await ensureFunded(wallet);
+  await ensureFunded(wallet, !seed);
 
   const providers = buildProviders<FaceValuePrivateState>(wallet, `facevalue-${net}-${Date.now()}`);
 
@@ -77,7 +87,7 @@ async function main() {
     const t0 = Date.now();
     const r = await fn();
     const s: Step = { step, actor, txHash: r.public.txHash, blockHeight: r.public.blockHeight, ms: Date.now() - t0, note };
-    steps.push(s);
+    record(s);
     logger.info(`✔ ${step} (${actor}) in ${(s.ms / 1000).toFixed(1)}s — tx ${s.txHash}`);
     return r;
   };
@@ -96,7 +106,8 @@ async function main() {
     callTx: Record<string, (...a: unknown[]) => Promise<{ public: { txHash: string; blockHeight?: number } }>>;
   };
   const tkrwAddress = tkrw.deployTxData.public.contractAddress;
-  steps.push({ step: 'deploy tKRW stablecoin', actor: 'issuer', txHash: tkrw.deployTxData.public.txHash, ms: Date.now() - t0 });
+  progress.tkrwContract = tkrwAddress;
+  record({ step: 'deploy tKRW stablecoin', actor: 'issuer', txHash: tkrw.deployTxData.public.txHash, ms: Date.now() - t0 });
   logger.info(`✔ deployed tKRW at ${tkrwAddress}`);
   const color = encodeRawTokenType(rawTokenType(pad32('facevalue:tKRW'), tkrwAddress as never));
 
@@ -108,13 +119,13 @@ async function main() {
     initialPrivateState: actors.issuer,
   } as never);
   const address = (deployed as { deployTxData: { public: { contractAddress: string; txHash: string } } }).deployTxData.public.contractAddress;
-  steps.push({ step: 'deploy FaceValue', actor: 'issuer', txHash: (deployed as never as { deployTxData: { public: { txHash: string } } }).deployTxData.public.txHash, ms: Date.now() - t0 });
+  progress.contractAddress = address;
+  record({ step: 'deploy FaceValue', actor: 'issuer', txHash: (deployed as never as { deployTxData: { public: { txHash: string } } }).deployTxData.public.txHash, ms: Date.now() - t0 });
   logger.info(`✔ deployed FaceValue at ${address}`);
 
   const join = async (id: keyof typeof actors) =>
     (await findDeployedContract(providers, {
       contractAddress: address,
-    tkrwContract: tkrwAddress,
       compiledContract: CompiledFaceValue,
       privateStateId: id,
       initialPrivateState: actors[id],
@@ -143,6 +154,7 @@ async function main() {
 
   // 3. show with a sealed seed
   const showId = rnd();
+  progress.showId = hex(showId);
   await timed('createShow (sealed seed committed)', 'organizer', () =>
     organizer.callTx.createShow(showId, FACE, CAPACITY, PER_FAN_CAP, pureCircuits.seedCommitment(SEED, SALT), BEACON_ROUND, BigInt(Math.floor(Date.now() / 1000) + 7 * 86400)),
   );
@@ -187,9 +199,7 @@ async function main() {
     steps,
     ranAt: new Date().toISOString(),
   };
-  const out = path.resolve('docs', 'evidence');
-  mkdirSync(out, { recursive: true });
-  writeFileSync(path.join(out, `${net}-run.json`), JSON.stringify(summary, null, 2));
+  writeFileSync(path.join(evidenceDir, `${net}-run.json`), JSON.stringify(summary, null, 2));
   logger.info(`all ${steps.length} transactions succeeded — evidence written to docs/evidence/${net}-run.json`);
   await wallet.stop();
   process.exit(0);

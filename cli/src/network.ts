@@ -158,26 +158,45 @@ export const buildProviders = <PS>(w: SeedWallet, storeName: string) => {
   };
 };
 
+/** One line of sync progress for each wallet part, so a slow sync shows in the log. */
+const progressOf = (p: unknown) => {
+  if (!p || typeof p !== 'object') return String(p);
+  const o = p as Record<string, unknown>;
+  const keys = ['appliedIndex', 'highestRelevantWalletIndex', 'highestIndex', 'highestRelevantIndex', 'appliedId', 'highestTransactionId', 'isConnected'];
+  return keys.filter((k) => k in o).map((k) => `${k}=${String(o[k])}`).join(' ');
+};
+const logProgress = (w: SeedWallet) =>
+  w.wallet
+    .state()
+    .pipe(Rx.throttleTime(60_000))
+    .subscribe((s) =>
+      logger.info(
+        `sync · shielded[${progressOf(s.shielded.state.progress)}] · unshielded[${progressOf(s.unshielded.progress)}] · dust[${progressOf(s.dust.state.progress)}] · tDUST ${s.dust.balance(new Date())}`,
+      ),
+    );
+
 /**
  * Preprod: make sure the wallet has tNIGHT (free faucet) and tDUST (fees), in one session.
  * Local devnet: the genesis wallet already has both.
+ * A wallet created for this run (`fresh`) is known to be empty, so it asks the faucet
+ * right away instead of first syncing the whole chain to learn its balance is zero.
  */
-export async function ensureFunded(w: SeedWallet): Promise<void> {
+export async function ensureFunded(w: SeedWallet, fresh = false): Promise<void> {
   const { FaucetClient } = await import('@midnight-ntwrk/testkit-js');
   const { UnshieldedAddress } = await import('@midnight-ntwrk/wallet-sdk-address-format');
   const { getNetworkId } = await import('@midnight-ntwrk/midnight-js-network-id');
   const { unshieldedToken } = await import('@midnight-ntwrk/midnight-js-protocol/ledger');
-  let s = await waitForSync(w);
-  const night = () => s.unshielded.balances[unshieldedToken().raw] ?? 0n;
-  if (night() === 0n && w.env.faucet) {
+  const progress = logProgress(w);
+  const nightOf = (x: FacadeState) => x.unshielded.balances[unshieldedToken().raw] ?? 0n;
+  let s = fresh ? await Rx.firstValueFrom(w.wallet.state()) : await waitForSync(w);
+  if ((fresh || nightOf(s) === 0n) && w.env.faucet) {
     const address = UnshieldedAddress.codec.encode(getNetworkId(), s.unshielded.address).toString();
     logger.info(`requesting tNIGHT from the faucet for ${address}`);
     await new FaucetClient(w.env.faucet, logger).requestTokens(address);
-    s = await Rx.firstValueFrom(
-      w.wallet.state().pipe(Rx.throttleTime(3000), Rx.filter((x) => isSynced(x) && (x.unshielded.balances[unshieldedToken().raw] ?? 0n) > 0n)),
-    );
+    // Only the unshielded balance matters here; the shielded and dust parts keep syncing meanwhile.
+    s = await Rx.firstValueFrom(w.wallet.state().pipe(Rx.throttleTime(3000), Rx.filter((x) => nightOf(x) > 0n)));
   }
-  logger.info(`tNIGHT balance ${night()}`);
+  logger.info(`tNIGHT balance ${nightOf(s)}`);
   if (s.dust.balance(new Date()) === 0n) {
     const utxos = s.unshielded.availableCoins.filter((c) => !c.meta.registeredForDustGeneration);
     if (utxos.length) {
@@ -191,7 +210,10 @@ export async function ensureFunded(w: SeedWallet): Promise<void> {
       const tx = await w.wallet.finalizeRecipe(recipe);
       logger.info(`dust registration tx ${await w.wallet.submitTransaction(tx)}`);
     }
-    await waitForDust(w);
+    await Rx.firstValueFrom(w.wallet.state().pipe(Rx.throttleTime(3000), Rx.filter((x) => x.dust.balance(new Date()) > 0n)));
   }
-  logger.info('wallet has tDUST for fees');
+  logger.info('wallet has tDUST for fees; waiting for a full sync before the first transaction');
+  await waitForSync(w);
+  progress.unsubscribe();
+  logger.info('wallet synced');
 }

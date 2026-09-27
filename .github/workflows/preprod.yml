@@ -11,7 +11,7 @@ permissions:
 jobs:
   preprod:
     runs-on: ubuntu-latest
-    timeout-minutes: 300
+    timeout-minutes: 350
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -31,12 +31,15 @@ jobs:
       - name: Full lifecycle on Preprod (real proofs)
         env:
           LOG_LEVEL: info
+        # Leaves ~15 minutes of the job for committing whatever reached the chain.
+        timeout-minutes: 325
         run: npx tsx cli/src/e2e.ts preprod
       - name: Commit evidence
+        if: always()
         run: |
           git config user.name Datwebguy
           git config user.email Datwebguy@users.noreply.github.com
-          node scripts/deployment-from-evidence.mjs preprod
-          git add docs/evidence/preprod-run.json app/src/deployment.ts
+          node scripts/deployment-from-evidence.mjs preprod || echo "nothing deployed yet"
+          git add docs/evidence app/src/deployment.ts
           git commit -m "Preprod deployment evidence" || true
           git push

@@ -13,6 +13,7 @@ midnight-level-db/
 logs-compile.txt
 logs-e2e.txt
 logs-*.txt
+!logs-spike.txt
 app/public/facevalue/
 app/public/tkrw/
 contract/src/managed/*/keys/

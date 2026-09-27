@@ -234,8 +234,8 @@ function Home() {
 
       <section className="band">
         <Reveal>
-          <p className="kicker">{t.liveKicker}</p>
-          <h2>{t.liveTitle}</h2>
+          <p className="kicker">{error ? t.recordedKicker : t.liveKicker}</p>
+          <h2>{error ? t.recordedTitle : t.liveTitle}</h2>
         </Reveal>
         {!shows && !error && <p className="muted">{t.reading}</p>}
         {shows?.map((s) => <ShowBoard key={s.id} s={s} enrolled={ledger ? String(ledger.enrolled) : undefined} />)}

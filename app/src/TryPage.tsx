@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import QRCode from 'qrcode';
 import { actor, Instant, ruleOf } from './instant';
 import { createPassKey, signPass, toHex, verifyPass, WINDOW_MS } from './gatepass';
@@ -18,6 +18,12 @@ export function TryPage() {
   const [qr, setQr] = useState('');
   const pass = useRef<Awaited<ReturnType<typeof createPassKey>> | null>(null);
   const admitted = useRef(new Set<string>());
+  const qrTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const stopQr = () => {
+    if (qrTimer.current) clearInterval(qrTimer.current);
+    qrTimer.current = null;
+  };
+  useEffect(() => stopQr, []);
   const [, tick] = useState(0);
 
   const log = (ok: boolean, text: string) => setLines((l) => [{ ok, text }, ...l]);
@@ -39,6 +45,7 @@ export function TryPage() {
     setSlot(0n);
     pass.current = null;
     admitted.current = new Set();
+    stopQr();
   };
 
   const s = world.show;
@@ -69,7 +76,7 @@ export function TryPage() {
     },
     {
       title: L('The draw', '추첨'),
-      body: L('The organizer sealed its seed before anyone entered. Mixed with every entry, it picks the winners. Nobody can steer it.', '주최자는 응모 전에 시드를 봉인했습니다. 모든 응모와 섞여 당첨자를 정하며, 아무도 조작할 수 없습니다.'),
+      body: L('The organizer sealed its seed before anyone entered, so it cannot swap the seed after seeing the entries. Mixed with every entry, it picks the winners.', '주최자는 응모 전에 시드를 봉인했으므로, 응모를 본 뒤 시드를 바꿀 수 없습니다. 모든 응모와 섞여 당첨자를 정합니다.'),
       action: L('Run the draw', '추첨하기'),
       run: () => {
         world.reveal();
@@ -121,7 +128,8 @@ export function TryPage() {
         world.as(you, (c, x) => c.checkIn(x, world.showId, slot, k.passKey));
         const draw = async () => setQr(await QRCode.toDataURL(await signPass(k.keyPair.privateKey, k.rawPublicKey, toHex(world.showId)), { margin: 1, width: 260 }));
         await draw();
-        setInterval(() => Date.now() % WINDOW_MS < 1000 && draw(), 1000);
+        stopQr();
+        qrTimer.current = setInterval(() => Date.now() % WINDOW_MS < 1000 && draw(), 1000);
         log(true, L('Checked in. Your code changes every 30 seconds.', '체크인 완료. 코드는 30초마다 바뀝니다.'));
       },
     },

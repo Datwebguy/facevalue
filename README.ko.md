@@ -43,7 +43,7 @@ FaceValue는 **아무것도 수집하지 않고** 인증합니다.
 
 ```bash
 npm install
-npm test                 # 테스트 22개: 컨트랙트 시뮬레이터 + 입장 패스 암호
+npm test                 # 테스트 23개: 컨트랙트 시뮬레이터 + 입장 패스 암호
 npm run attack           # 컴파일된 서킷을 대상으로 한 공격 스크립트
 npm run localnet         # 로컬 Midnight 노드, 인덱서, 증명 서버 (Docker)
 npm run e2e -- local     # 실제 증명으로 전체 생애주기 실행

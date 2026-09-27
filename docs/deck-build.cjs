@@ -1,8 +1,8 @@
 const pptxgen = require('pptxgenjs');
 const path = require('path');
 
-const BRAND = 'C:/Users/DELL/facevalue/docs/brand';
-const OUT = 'C:/Users/DELL/facevalue/docs/FaceValue-deck.pptx';
+const BRAND = path.join(__dirname, 'brand');
+const OUT = path.join(__dirname, 'FaceValue-deck.pptx');
 
 const C = {
   bg: '07081A', panel: '14163A', ink: 'F4F1FF', muted: 'A7A5C8',

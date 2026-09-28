@@ -1,0 +1,133 @@
+{
+  "network": "preprod",
+  "tkrwContract": "cfa973d92e5d2690d62d66724e12c9359a7c2fe159685e12c7a69a4c13760c91",
+  "contractAddress": "1cf78af9c4c69d0b32bb3bd4cdd1d00ee2ae89d9ce2031f484c19665e5dd3179",
+  "showId": "852c2cd4f7727e58c6eb8670cc91cbf81d46e24886aa8f6c669aecf2716ef59a",
+  "steps": [
+    {
+      "step": "deploy tKRW stablecoin",
+      "actor": "issuer",
+      "txHash": "b099695d4275aa96a27add77e45f8d0fbcedfc0672516d1c135f734e55ac5e9a",
+      "ms": 17750
+    },
+    {
+      "step": "deploy FaceValue",
+      "actor": "issuer",
+      "txHash": "de7c4dec4ec9425b4e7212e344b83be78b9c6f220fac40f74cd0e160dca767dc",
+      "ms": 53005
+    },
+    {
+      "step": "mint 1,000,000 shielded tKRW to the wallet",
+      "actor": "minji",
+      "txHash": "8f6fd570d48545aeeb0353fab772ee1074ed5a57f15ccc3931ef31c78eaf4f4e",
+      "blockHeight": 2740343,
+      "ms": 21941
+    },
+    {
+      "step": "enrollBatch (3 verified fans)",
+      "actor": "issuer",
+      "txHash": "a4e482e35df2f83cc172cd7198e3152d63dbeeed5eb3674424524a94ca22245d",
+      "blockHeight": 2740347,
+      "ms": 25080
+    },
+    {
+      "step": "createShow (sealed seed committed)",
+      "actor": "organizer",
+      "txHash": "af15cea6089060462468d316721794cbd2e25862bb2ee03a71f2292ef1e5ed7e",
+      "blockHeight": 2740351,
+      "ms": 22533
+    },
+    {
+      "step": "enterDraw",
+      "actor": "minji",
+      "txHash": "97b0d4f0d9e0829003d4f41cfebfc790b0ceae05da48b46c8c4d86d74e5b5848",
+      "blockHeight": 2740355,
+      "ms": 24918
+    },
+    {
+      "step": "enterDraw",
+      "actor": "joon",
+      "txHash": "098f307e909e150f06504b2a4d07401fed329163f236defad24ce968a6bf0dab",
+      "blockHeight": 2740359,
+      "ms": 23698
+    },
+    {
+      "step": "enterDraw",
+      "actor": "seoyeon",
+      "txHash": "519eb34d9b2a4d875bb71aa41fd9fed3cdf5c3efca8061fafff1997c91a3ae46",
+      "blockHeight": 2740363,
+      "ms": 24432
+    },
+    {
+      "step": "advance: close entries",
+      "actor": "organizer",
+      "txHash": "41011e8bbaba30578c2b3341585ba94e3f382d464cc7045b09ebb5b59611e711",
+      "blockHeight": 2740367,
+      "ms": 23041
+    },
+    {
+      "step": "revealDraw",
+      "actor": "organizer",
+      "txHash": "e5688a76cbd67597be1a4f5c88872e220f2a42b8c9d4a98eff27cdd9c2cafa27",
+      "blockHeight": 2740371,
+      "ms": 24455
+    },
+    {
+      "step": "claimTicket (pay ₩110,000 shielded)",
+      "actor": "joon",
+      "txHash": "9a8f0a96f9a81f2d1f145ebddc8546f4e6fe7fa062bbb0c0d3fa3798d5f99187",
+      "blockHeight": 2740378,
+      "ms": 41769
+    },
+    {
+      "step": "claimTicket (pay ₩110,000 shielded)",
+      "actor": "seoyeon",
+      "txHash": "e0ba9a693d53ad88b810dc6631bebebc217e559b2492167926fabcc95d5237ed",
+      "blockHeight": 2740386,
+      "ms": 47612
+    },
+    {
+      "step": "returnTicket (refund at face value)",
+      "actor": "joon",
+      "txHash": "e9baff4c9be071e437a6a5685f4de44456d2fbd2222319b12ac4125c1c483bc8",
+      "blockHeight": 2740393,
+      "ms": 41883
+    },
+    {
+      "step": "advance: open face-value pool",
+      "actor": "organizer",
+      "txHash": "f6699b6a24d4e5c006af17613aa82ba998dd33c3cf8cca7cb4fb3850cff2784c",
+      "blockHeight": 2740396,
+      "ms": 19017
+    },
+    {
+      "step": "buyFromPool (face value only)",
+      "actor": "minji",
+      "txHash": "5ab20e8867dd595db9d40408ec4d7c9352fb9f12161ddac67fdb696a6e27d0fa",
+      "blockHeight": 2740404,
+      "ms": 48195
+    },
+    {
+      "step": "checkIn (register gate pass)",
+      "actor": "seoyeon",
+      "txHash": "ba57a7bdd3cf58f4f3ca3079b2c6682ef3bfc6fe4db5d8e32abc388aa4e6af0a",
+      "blockHeight": 2740408,
+      "ms": 23622
+    },
+    {
+      "step": "advance: close show",
+      "actor": "organizer",
+      "txHash": "5a928026d787445fd1ee177b387f25ff1d0ca343e6277c83f6b528e8e9b0f4fe",
+      "blockHeight": 2740412,
+      "ms": 23195
+    },
+    {
+      "step": "withdraw (organizer revenue)",
+      "actor": "organizer",
+      "txHash": "95857d0123d885d1f4e2b80f3fc95ac15ed16d758beb176fb0dcfc216cebd1c1",
+      "blockHeight": 2740417,
+      "ms": 29803
+    }
+  ],
+  "updatedAt": "2026-09-28T01:49:49.668Z"
+}

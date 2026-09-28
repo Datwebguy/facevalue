@@ -20,7 +20,8 @@ import {
   pureCircuits,
   type FaceValuePrivateState,
 } from '../../contract/src/index.js';
-import { GENESIS_SEED, SeedWallet, buildProviders, ensureFunded, environments, logger, zkConfigPath } from './network.js';
+import { inspect } from 'node:util';
+import { GENESIS_SEED, SeedWallet, buildProviders, ensureFunded, environments, logger, waitForDust, zkConfigPath } from './network.js';
 
 // Preprod seed: FV_SEED, else the local project wallet, else a throwaway wallet
 // created for this run (funded from the free faucet, discarded afterwards).
@@ -78,6 +79,22 @@ async function main() {
     seoyeon: createPrivateState(rnd(), rnd()),
   };
 
+  // A transaction sent right after the previous one can be rejected by the node while the
+  // wallet has not yet seen that block (it reuses a spent fee coin) or is short of tDUST.
+  // Wait for the wallet to catch up, then rebuild and resubmit.
+  const retrying = async <T>(what: string, fn: () => Promise<T>): Promise<T> => {
+    for (let attempt = 1; ; attempt++) {
+      try {
+        return await fn();
+      } catch (e) {
+        if (attempt > 3 || !/submission/i.test(String((e as Error)?.message))) throw e;
+        logger.warn(`${what}: ${(e as Error).message} (attempt ${attempt}) — cause: ${inspect((e as { cause?: unknown }).cause, { depth: 6 })}`);
+        await new Promise((r) => setTimeout(r, 30_000));
+        await waitForDust(wallet);
+      }
+    }
+  };
+
   const timed = async <T extends { public: { txHash: string; blockHeight?: number } }>(
     step: string,
     actor: string,
@@ -85,7 +102,7 @@ async function main() {
     note?: string,
   ) => {
     const t0 = Date.now();
-    const r = await fn();
+    const r = await retrying(step, fn);
     const s: Step = { step, actor, txHash: r.public.txHash, blockHeight: r.public.blockHeight, ms: Date.now() - t0, note };
     record(s);
     logger.info(`✔ ${step} (${actor}) in ${(s.ms / 1000).toFixed(1)}s — tx ${s.txHash}`);
@@ -101,7 +118,7 @@ async function main() {
     CompiledContract.withCompiledFileAssets(tkrwZk),
   );
   let t0 = Date.now();
-  const tkrw = (await deployContract(tkrwProviders as never, { compiledContract: CompiledTkrw } as never)) as never as {
+  const tkrw = (await retrying('deploy tKRW', () => deployContract(tkrwProviders as never, { compiledContract: CompiledTkrw } as never))) as never as {
     deployTxData: { public: { contractAddress: string; txHash: string } };
     callTx: Record<string, (...a: unknown[]) => Promise<{ public: { txHash: string; blockHeight?: number } }>>;
   };
@@ -112,12 +129,14 @@ async function main() {
   const color = encodeRawTokenType(rawTokenType(pad32('facevalue:tKRW'), tkrwAddress as never));
 
   t0 = Date.now();
-  const deployed = await deployContract(providers, {
-    compiledContract: CompiledFaceValue,
-    args: [pureCircuits.rolePk(actors.issuer.roleSecret), color],
-    privateStateId: 'issuer',
-    initialPrivateState: actors.issuer,
-  } as never);
+  const deployed = await retrying('deploy FaceValue', () =>
+    deployContract(providers, {
+      compiledContract: CompiledFaceValue,
+      args: [pureCircuits.rolePk(actors.issuer.roleSecret), color],
+      privateStateId: 'issuer',
+      initialPrivateState: actors.issuer,
+    } as never),
+  );
   const address = (deployed as { deployTxData: { public: { contractAddress: string; txHash: string } } }).deployTxData.public.contractAddress;
   progress.contractAddress = address;
   record({ step: 'deploy FaceValue', actor: 'issuer', txHash: (deployed as never as { deployTxData: { public: { txHash: string } } }).deployTxData.public.txHash, ms: Date.now() - t0 });
@@ -206,6 +225,6 @@ async function main() {
 }
 
 main().catch((e) => {
-  logger.error(e instanceof Error ? `${e.message}\n${e.stack}` : String(e));
+  logger.error(e instanceof Error ? `${e.message}\n${e.stack}\ncause: ${inspect(e.cause, { depth: 6 })}` : String(e));
   process.exit(1);
 });

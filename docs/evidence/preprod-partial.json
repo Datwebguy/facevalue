@@ -1,13 +1,20 @@
 {
   "network": "preprod",
-  "tkrwContract": "d6651a67c8ec5bb02aa3ba350450a64254f58abd7887953eaaef78282893933d",
+  "tkrwContract": "cfa973d92e5d2690d62d66724e12c9359a7c2fe159685e12c7a69a4c13760c91",
+  "contractAddress": "1cf78af9c4c69d0b32bb3bd4cdd1d00ee2ae89d9ce2031f484c19665e5dd3179",
   "steps": [
     {
       "step": "deploy tKRW stablecoin",
       "actor": "issuer",
-      "txHash": "ecb5ab47d3e052baa313351f3f37a46e42caa07e7e2eeb9e74a5087a44d5b099",
-      "ms": 23524
+      "txHash": "b099695d4275aa96a27add77e45f8d0fbcedfc0672516d1c135f734e55ac5e9a",
+      "ms": 17750
+    },
+    {
+      "step": "deploy FaceValue",
+      "actor": "issuer",
+      "txHash": "de7c4dec4ec9425b4e7212e344b83be78b9c6f220fac40f74cd0e160dca767dc",
+      "ms": 53005
     }
   ],
-  "updatedAt": "2026-09-27T23:39:08.986Z"
+  "updatedAt": "2026-09-28T01:42:01.785Z"
 }

@@ -39,6 +39,13 @@ const pad32 = (s: string) => {
   return out;
 };
 
+// Wallet SDK errors arrive wrapped by Effect.runPromise in a FiberFailure, which has no
+// `.cause`; the original error (with the node's rejection reason) sits under a symbol key.
+const causeOf = (e: unknown) => {
+  const key = Object.getOwnPropertySymbols(Object(e)).find((s) => s.description === 'effect/Runtime/FiberFailure/Cause');
+  return inspect(key ? (e as Record<symbol, unknown>)[key] : (e as { cause?: unknown })?.cause, { depth: 8 });
+};
+
 type Step = { step: string; actor: string; txHash?: string; blockHeight?: number; ms: number; note?: string };
 const steps: Step[] = [];
 
@@ -88,7 +95,7 @@ async function main() {
         return await fn();
       } catch (e) {
         if (attempt > 3 || !/submission/i.test(String((e as Error)?.message))) throw e;
-        logger.warn(`${what}: ${(e as Error).message} (attempt ${attempt}) — cause: ${inspect((e as { cause?: unknown }).cause, { depth: 6 })}`);
+        logger.warn(`${what}: ${(e as Error).message} (attempt ${attempt}) — cause: ${causeOf(e)}`);
         await new Promise((r) => setTimeout(r, 30_000));
         await waitForDust(wallet);
       }
@@ -225,6 +232,6 @@ async function main() {
 }
 
 main().catch((e) => {
-  logger.error(e instanceof Error ? `${e.message}\n${e.stack}\ncause: ${inspect(e.cause, { depth: 6 })}` : String(e));
+  logger.error(e instanceof Error ? `${e.message}\n${e.stack}\ncause: ${causeOf(e)}` : String(e));
   process.exit(1);
 });

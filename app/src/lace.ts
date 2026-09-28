@@ -47,13 +47,14 @@ export async function connectLace(network: 'preprod' | 'local') {
   const initial = findWallet();
   if (!initial) throw new Error('Midnight Lace wallet not found. Install the Lace extension and enable Midnight.');
   setNetworkId((network === 'local' ? 'undeployed' : network) as never);
-  // On a phone the Lace approval popup never opens, so connect() never settles; give up with a hint.
+  // Some mobile browsers with extensions (e.g. Mises) never show Lace's approval popup, so connect()
+  // never settles; give up with a hint instead of waiting forever.
   let timer: ReturnType<typeof setTimeout> | undefined;
   const api: ConnectedAPI = await Promise.race([
     initial.connect(network === 'local' ? 'undeployed' : network),
     new Promise<never>((_, reject) => {
       timer = setTimeout(
-        () => reject(new Error('Lace did not answer. Open this page in Chrome or Brave on a computer with the Lace extension, then approve the popup.')),
+        () => reject(new Error('Lace did not answer. Open Lace from the browser extensions menu, approve the connection, then tap Go again. If no request shows there, use Chrome or Brave on a computer.')),
         60_000,
       );
     }),

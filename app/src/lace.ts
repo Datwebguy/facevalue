@@ -47,7 +47,17 @@ export async function connectLace(network: 'preprod' | 'local') {
   const initial = findWallet();
   if (!initial) throw new Error('Midnight Lace wallet not found. Install the Lace extension and enable Midnight.');
   setNetworkId((network === 'local' ? 'undeployed' : network) as never);
-  const api: ConnectedAPI = await initial.connect(network === 'local' ? 'undeployed' : network);
+  // On a phone the Lace approval popup never opens, so connect() never settles; give up with a hint.
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const api: ConnectedAPI = await Promise.race([
+    initial.connect(network === 'local' ? 'undeployed' : network),
+    new Promise<never>((_, reject) => {
+      timer = setTimeout(
+        () => reject(new Error('Lace did not answer. Open this page in Chrome or Brave on a computer with the Lace extension, then approve the popup.')),
+        60_000,
+      );
+    }),
+  ]).finally(() => clearTimeout(timer));
   const config = await api.getConfiguration();
   const addresses = await api.getShieldedAddresses();
   const zk = new FetchZkConfigProvider<string>(new URL('facevalue', location.href).href.replace(/\/$/, ''), fetch.bind(window));

@@ -6,7 +6,7 @@ import { FetchZkConfigProvider } from '@midnight-ntwrk/midnight-js-fetch-zk-conf
 import { httpClientProofProvider } from '@midnight-ntwrk/midnight-js-http-client-proof-provider';
 import * as Tkrw from '../../contract/src/managed/tkrw/contract/index.js';
 import { CompiledFaceValue, createPrivateState, pureCircuits } from '../../contract/src/index';
-import { DEPLOYMENT, saveDeployment } from './deployment';
+import { DEPLOYMENT, ownDeployment, saveDeployment } from './deployment';
 import { connectLace, type FanContract } from './lace';
 import { toHex } from './gatepass';
 import { useI18n } from './i18n';
@@ -53,6 +53,8 @@ export function SetupPage() {
   const [, force] = useState(0);
   const say = (m: string) => setLog((l) => [`${new Date().toLocaleTimeString()} ${m}`, ...l]);
   const state = () => createPrivateState(fromHex(admin.roleSecret), fromHex(admin.fanSecret));
+  // Only a box office opened from this browser can be run here: the published one's keys are not ours.
+  const mine = ownDeployment();
 
   const run = async (label: string, f: () => Promise<unknown>) => {
     setBusy(true);
@@ -71,7 +73,7 @@ export function SetupPage() {
 
   const fv = async () =>
     (await findDeployedContract(lace!.providers as never, {
-      contractAddress: DEPLOYMENT.contract,
+      contractAddress: mine.contract,
       compiledContract: CompiledFaceValue,
       privateStateId: 'organizer',
       initialPrivateState: state(),
@@ -90,31 +92,31 @@ export function SetupPage() {
     [L('Connect Lace (Preprod)', 'Lace 연결 (Preprod)'), !!lace, async () => setLace(await connectLace('preprod'))],
     [
       L('Open the ticket currency', '티켓 결제 통화 개설'),
-      !!DEPLOYMENT.tkrwContract,
+      !!mine.tkrwContract,
       async () => {
         const d = (await deployContract(tkrwProviders() as never, { compiledContract: compiledTkrw } as never)) as unknown as {
           deployTxData: { public: { contractAddress: string } };
         };
-        saveDeployment({ network: 'preprod', tkrwContract: d.deployTxData.public.contractAddress });
+        saveDeployment({ network: 'preprod', tkrwContract: d.deployTxData.public.contractAddress, contract: '', showId: '' });
       },
     ],
     [
       L('Open the box office', '매표소 열기'),
-      !!DEPLOYMENT.contract,
+      !!mine.contract,
       async () => {
-        const color = encodeRawTokenType(rawTokenType(pad32('facevalue:tKRW'), DEPLOYMENT.tkrwContract as never));
+        const color = encodeRawTokenType(rawTokenType(pad32('facevalue:tKRW'), mine.tkrwContract as never));
         const d = (await deployContract(lace!.providers as never, {
           compiledContract: CompiledFaceValue,
           args: [pureCircuits.rolePk(fromHex(admin.roleSecret)), color],
           privateStateId: 'organizer',
           initialPrivateState: state(),
         } as never)) as unknown as { deployTxData: { public: { contractAddress: string } } };
-        saveDeployment({ contract: d.deployTxData.public.contractAddress });
+        saveDeployment({ contract: d.deployTxData.public.contractAddress, showId: '' });
       },
     ],
     [
       L('Announce the show (draw sealed)', '공연 발표 (추첨 봉인)'),
-      !!DEPLOYMENT.showId,
+      !!mine.showId,
       async () => {
         const latest = await (await fetch(`${DRAND}/public/latest`)).json();
         const beaconRound = Number(latest.round) + 1200; // about an hour ahead
@@ -153,16 +155,16 @@ export function SetupPage() {
       setCodes('');
     });
 
-  const advance = (label: string) => run(label, async () => (await fv()).callTx.advance(fromHex(DEPLOYMENT.showId)));
+  const advance = (label: string) => run(label, async () => (await fv()).callTx.advance(fromHex(mine.showId!)));
   const reveal = () =>
     run(L('Reveal the draw', '추첨 공개'), async () => {
       const r = await fetch(`${DRAND}/public/${admin.beaconRound}`);
       if (!r.ok) throw new Error(L('The beacon round is not out yet. Try again soon.', '비콘 값이 아직 나오지 않았습니다. 잠시 후 다시 시도하세요.'));
       const beacon = parseInt((await r.json()).randomness.slice(0, 8), 16);
-      await (await fv()).callTx.revealDraw(fromHex(DEPLOYMENT.showId), BigInt(admin.seed), fromHex(admin.salt), BigInt(beacon));
+      await (await fv()).callTx.revealDraw(fromHex(mine.showId!), BigInt(admin.seed), fromHex(admin.salt), BigInt(beacon));
     });
 
-  const ready = !!DEPLOYMENT.showId && !!lace;
+  const ready = !!mine.showId && !!lace;
   return (
     <main className="page">
       <h1 className="page-title">{L('Open the box office', '매표소 열기')}</h1>
@@ -213,10 +215,10 @@ export function SetupPage() {
         </>
       )}
 
-      {DEPLOYMENT.contract && (
+      {mine.contract && (
         <details>
           <summary>{L('Box office details', '매표소 정보')}</summary>
-          <code>{JSON.stringify({ contract: DEPLOYMENT.contract, tkrwContract: DEPLOYMENT.tkrwContract, showId: DEPLOYMENT.showId }, null, 1)}</code>
+          <code>{JSON.stringify({ contract: mine.contract, tkrwContract: mine.tkrwContract, showId: mine.showId }, null, 1)}</code>
         </details>
       )}
       <ol className="log">{log.map((l, i) => <li key={i}>{l}</li>)}</ol>

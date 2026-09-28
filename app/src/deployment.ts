@@ -29,6 +29,9 @@ const local = (): Partial<Deployment> => {
 
 export const DEPLOYMENT: Deployment = { ...PUBLISHED, ...local() };
 
+/** The box office this browser opened itself (the organizer holds its keys); empty until then. */
+export const ownDeployment = (): Partial<Deployment> => local();
+
 export function saveDeployment(d: Partial<Deployment>) {
   const next = { ...local(), ...d };
   try {

@@ -12,10 +12,10 @@ export type Deployment = {
 
 const PUBLISHED: Deployment = {
   network: 'preprod',
-  contract: '',
-  tkrwContract: '',
+  contract: '1cf78af9c4c69d0b32bb3bd4cdd1d00ee2ae89d9ce2031f484c19665e5dd3179',
+  tkrwContract: 'cfa973d92e5d2690d62d66724e12c9359a7c2fe159685e12c7a69a4c13760c91',
   faceValue: '110000',
-  showId: '',
+  showId: '852c2cd4f7727e58c6eb8670cc91cbf81d46e24886aa8f6c669aecf2716ef59a',
   explorer: 'https://explorer.preprod.midnight.network/contracts/',
 };
 

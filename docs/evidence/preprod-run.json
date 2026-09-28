@@ -1,8 +1,30 @@
 {
   "network": "preprod",
-  "tkrwContract": "cfa973d92e5d2690d62d66724e12c9359a7c2fe159685e12c7a69a4c13760c91",
   "contractAddress": "1cf78af9c4c69d0b32bb3bd4cdd1d00ee2ae89d9ce2031f484c19665e5dd3179",
+  "tkrwContract": "cfa973d92e5d2690d62d66724e12c9359a7c2fe159685e12c7a69a4c13760c91",
   "showId": "852c2cd4f7727e58c6eb8670cc91cbf81d46e24886aa8f6c669aecf2716ef59a",
+  "finalShow": {
+    "organizer": "a90cd81a6607c6c6b551183e5c8e2fc249bb48dcc4a64f7984faa7fab2654b7d",
+    "faceValue": "110000",
+    "capacity": "2",
+    "perFanCap": "2",
+    "phase": "4",
+    "seedCommit": "44c057a26efc9c99e42ee206bb86c33f08e1a531cab2fa92fc13413bf1270a30",
+    "beaconRound": "5000000",
+    "revealBy": "1791164571",
+    "organizerDefaulted": "false",
+    "beacon": "123456789",
+    "seed": "3557540953",
+    "entropy": "2286446361",
+    "entries": "3",
+    "offset": "1",
+    "issued": "3",
+    "pool": "0",
+    "returned": "1",
+    "checkedIn": "1",
+    "revenue": "0"
+  },
+  "passRegistered": true,
   "steps": [
     {
       "step": "deploy tKRW stablecoin",
@@ -129,5 +151,5 @@
       "ms": 29803
     }
   ],
-  "updatedAt": "2026-09-28T01:49:49.668Z"
+  "ranAt": "2026-09-28T01:49:49.942Z"
 }

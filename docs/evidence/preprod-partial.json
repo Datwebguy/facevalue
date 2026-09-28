@@ -14,7 +14,21 @@
       "actor": "issuer",
       "txHash": "de7c4dec4ec9425b4e7212e344b83be78b9c6f220fac40f74cd0e160dca767dc",
       "ms": 53005
+    },
+    {
+      "step": "mint 1,000,000 shielded tKRW to the wallet",
+      "actor": "minji",
+      "txHash": "8f6fd570d48545aeeb0353fab772ee1074ed5a57f15ccc3931ef31c78eaf4f4e",
+      "blockHeight": 2740343,
+      "ms": 21941
+    },
+    {
+      "step": "enrollBatch (3 verified fans)",
+      "actor": "issuer",
+      "txHash": "a4e482e35df2f83cc172cd7198e3152d63dbeeed5eb3674424524a94ca22245d",
+      "blockHeight": 2740347,
+      "ms": 25080
     }
   ],
-  "updatedAt": "2026-09-28T01:42:01.785Z"
+  "updatedAt": "2026-09-28T01:42:51.211Z"
 }
